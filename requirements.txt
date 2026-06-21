@@ -7,3 +7,4 @@ pandas
 schedule
 whois
 pytz
+matplotlib
