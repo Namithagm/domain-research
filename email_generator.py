@@ -1,5 +1,6 @@
 import csv
 import sys
+import re
 sys.path.insert(0, r'C:\Users\Namitha\Downloads\domain-research')
 
 from supabase import create_client
@@ -59,6 +60,35 @@ COMMON_LOCAL_PARTS = [
     "cfo", "cto", "coo", "cio", "cmo", "cpo", "cso", "svp", "vp"
 ]
 
+def extract_keywords(domain):
+    """Extract keywords from domain name"""
+    # Remove TLD (.com, .org, etc.)
+    name = re.sub(r'\.[a-z]+$', '', domain)
+    # Split by dots and hyphens
+    parts = re.split(r'[\.\-]', name)
+    return parts
+
+def find_related_domains(domain, limit=20):
+    """Find domains related to the given domain"""
+    keywords = extract_keywords(domain)
+    
+    related = []
+    for keyword in keywords:
+        if len(keyword) > 2:  # Skip short words
+            # Search for domains containing this keyword
+            result = supabase.table('domains').select('domain_name, score').like('domain_name', f'%{keyword}%').order('score', desc=True).limit(limit).execute()
+            related.extend(result.data)
+    
+    # Remove duplicates and self
+    seen = set()
+    unique = []
+    for r in related:
+        if r['domain_name'] != domain and r['domain_name'] not in seen:
+            seen.add(r['domain_name'])
+            unique.append(r)
+    
+    return unique[:limit]
+
 def generate_emails(domain, local_parts=None):
     """Generate emails for a domain using common local parts"""
     if local_parts is None:
@@ -67,11 +97,34 @@ def generate_emails(domain, local_parts=None):
 
 def generate_emails_for_domains(domains, local_parts=None):
     """Generate emails for multiple domains"""
+    if local_parts is None:
+        local_parts = COMMON_LOCAL_PARTS
     all_emails = []
     for domain in domains:
         emails = generate_emails(domain, local_parts)
         all_emails.extend(emails)
     return all_emails
+
+def get_emails_with_related(domain, local_parts=None):
+    """Get emails for domain + related domains (FindMassLeads style)"""
+    if local_parts is None:
+        local_parts = COMMON_LOCAL_PARTS
+    
+    all_results = []
+    
+    # 1. Emails for exact domain (top 5 local parts)
+    exact_emails = generate_emails(domain, local_parts[:10])
+    for email in exact_emails[:5]:
+        all_results.append((domain, email))
+    
+    # 2. Emails for related domains (top 3 domains, top 3 emails each)
+    related = find_related_domains(domain, limit=10)
+    for r in related[:3]:  # Top 3 related
+        emails = generate_emails(r['domain_name'], local_parts[:10])
+        for email in emails[:3]:  # Top 3 emails each
+            all_results.append((r['domain_name'], email))
+    
+    return all_results
 
 def export_emails_to_csv(emails, filename="generated_emails.csv"):
     """Export emails to CSV file"""

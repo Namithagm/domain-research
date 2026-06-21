@@ -156,6 +156,52 @@ if st.button("📧 Generate Emails", type="secondary", use_container_width=True)
 
 st.divider()
 
+# ====== FindMassLeads Style Email Finder ======
+st.subheader("🔍 FindMassLeads Style - Email Finder")
+
+st.markdown("""
+Find emails for a domain AND related domains (like FindMassLeads!).
+Enter a domain and we'll find emails for it and similar domains.
+""")
+
+search_domain = st.text_input("Enter a domain (e.g., ashford.gov.uk)", placeholder="domain.com")
+
+if st.button("🔍 Find Emails with Related Domains", type="secondary"):
+    if search_domain:
+        with st.spinner(f"Searching for emails related to {search_domain}..."):
+            try:
+                from email_generator import get_emails_with_related, COMMON_LOCAL_PARTS
+                
+                results = get_emails_with_related(search_domain, COMMON_LOCAL_PARTS)
+                
+                if results:
+                    st.success(f"✅ Found {len(results)} emails")
+                    
+                    # Group by domain
+                    data = []
+                    for domain, email in results:
+                        data.append({'Domain': domain, 'Email': email})
+                    
+                    df = pd.DataFrame(data)
+                    st.dataframe(df, use_container_width=True)
+                    
+                    # Download CSV
+                    st.download_button(
+                        label="📥 Download Emails CSV",
+                        data=df.to_csv(index=False),
+                        file_name=f"emails_related_{search_domain}_{date.today()}.csv",
+                        mime="text/csv"
+                    )
+                else:
+                    st.warning("No emails found. Try another domain.")
+            except Exception as e:
+                st.error(f"Error: {e}")
+                st.info("Make sure email_generator.py exists in your project folder.")
+    else:
+        st.warning("Please enter a domain.")
+
+st.divider()
+
 # ====== Info Section ======
 with st.expander("ℹ️ How It Works"):
     st.markdown("""
@@ -177,6 +223,12 @@ with st.expander("ℹ️ How It Works"):
     - Uses common local parts (info, contact, sales, etc.)
     - Similar to FindMassLeads functionality
     - Export all emails to CSV
+
+    **FindMassLeads Style:**
+    - Enter any domain
+    - Finds emails for that domain AND related domains
+    - Uses keyword matching to find similar domains
+    - Export all found emails to CSV
     """)
 
 with st.expander("🛠️ Third Party Sources Used"):
