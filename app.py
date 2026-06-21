@@ -40,54 +40,66 @@ cooldown = col3.slider("Cooldown Days (no repeats)", 0, 90, 1)
 
 st.divider()
 
-# ====== Get Domains Button ======
+# ====== Get Domains Button with Debug ======
 if st.button("🚀 Get Fresh Domains", type="primary", use_container_width=True):
     with st.spinner("Fetching fresh domains..."):
         rows = get_fresh_domains(domain_count, min_score, cooldown)
         
-        # Debug: Show how many domains were found
         st.write(f"🔍 Found {len(rows)} domains matching your criteria")
+        
+        # === DEBUG: Show first row ===
+        if rows:
+            st.write("DEBUG - First row:", rows[0])
+            st.write("DEBUG - Number of columns:", len(rows[0]) if rows else 0)
+        else:
+            st.write("DEBUG - No rows returned")
+        # ============================
 
-    if not rows:
-        st.warning("""
-        No fresh domains available. Try:
-        - Lowering the Minimum Score
-        - Reducing Cooldown Days to 0 or 1
-        - Waiting for the daily scrape to run
-        """)
-    else:
-        df = pd.DataFrame(rows)
-        batch_id = str(uuid.uuid4())[:8]
-        mark_as_served(df["domain_name"].tolist(), batch_id)
+        if not rows:
+            st.warning("""
+            No fresh domains available. Try:
+            - Lowering the Minimum Score
+            - Reducing Cooldown Days to 0 or 1
+            - Waiting for the daily scrape to run
+            """)
+        else:
+            df = pd.DataFrame(rows)
+            
+            # === DEBUG: Show DataFrame info ===
+            st.write("DEBUG - DataFrame columns:", df.columns.tolist())
+            st.write("DEBUG - DataFrame shape:", df.shape)
+            st.write("DEBUG - First 3 rows:")
+            st.dataframe(df.head(3))
+            # ================================
+            
+            batch_id = str(uuid.uuid4())[:8]
+            mark_as_served(df["domain_name"].tolist(), batch_id)
 
-        st.success(f"✅ {len(df)} fresh domains fetched — Batch ID: {batch_id}")
+            st.success(f"✅ {len(df)} fresh domains fetched — Batch ID: {batch_id}")
 
-        # Display dataframe with color coding (if matplotlib available)
-        try:
-            st.dataframe(
-                df.style.background_gradient(subset=["score"], cmap="RdYlGn"),
-                use_container_width=True
+            # Try displaying with color coding
+            try:
+                st.dataframe(
+                    df.style.background_gradient(subset=["score"], cmap="RdYlGn"),
+                    use_container_width=True
+                )
+            except Exception as e:
+                st.warning(f"Color coding failed: {e}")
+                st.dataframe(df, use_container_width=True)
+
+            # Download CSV
+            st.download_button(
+                label="📥 Download CSV",
+                data=df.to_csv(index=False),
+                file_name=f"domains_{date.today()}_{batch_id}.csv",
+                mime="text/csv"
             )
-        except Exception as e:
-            # Fallback if matplotlib not installed
-            st.dataframe(df, use_container_width=True)
-            st.info("💡 Install matplotlib for color-coded scores: `pip install matplotlib`")
 
-        # Download CSV
-        st.download_button(
-            label="📥 Download CSV",
-            data=df.to_csv(index=False),
-            file_name=f"domains_{date.today()}_{batch_id}.csv",
-            mime="text/csv"
-        )
-
-        # Show detailed stats
-        with st.expander("📊 Score Distribution"):
-            if len(df) > 0:
-                score_dist = df["score"].value_counts().sort_index()
-                st.bar_chart(score_dist)
-            else:
-                st.info("No data to display")
+            # Show detailed stats
+            with st.expander("📊 Score Distribution"):
+                if len(df) > 0 and "score" in df.columns:
+                    score_dist = df["score"].value_counts().sort_index()
+                    st.bar_chart(score_dist)
 
 st.divider()
 
