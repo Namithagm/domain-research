@@ -202,6 +202,49 @@ if st.button("🔍 Find Emails with Related Domains", type="secondary"):
 
 st.divider()
 
+# ====== Combined Email Finder ======
+st.subheader("🔍 Advanced Email Finder")
+
+st.markdown("""
+Find emails for your high-score domains AND related domains.
+This combines both features in one click!
+""")
+
+if st.button("🚀 Find All Emails (Domains + Related)", type="primary"):
+    with st.spinner("Finding emails from high-score domains and related domains..."):
+        try:
+            # 1. Get high-score domains
+            rows = get_fresh_domains(50, 70, 1)
+            
+            if rows:
+                domains = [r['domain_name'] for r in rows]
+                all_results = []
+                
+                # 2. For each domain, find related emails
+                from email_generator import get_emails_with_related, COMMON_LOCAL_PARTS
+                
+                for domain in domains[:10]:  # Limit to 10 domains for speed
+                    results = get_emails_with_related(domain, COMMON_LOCAL_PARTS)
+                    all_results.extend(results)
+                
+                # 3. Display results
+                df = pd.DataFrame(all_results, columns=['Domain', 'Email'])
+                st.success(f"✅ Found {len(df)} emails from {len(domains)} domains")
+                st.dataframe(df, use_container_width=True)
+                
+                st.download_button(
+                    label="📥 Download All Emails CSV",
+                    data=df.to_csv(index=False),
+                    file_name=f"all_emails_{date.today()}.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.warning("No high-score domains found.")
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+st.divider()
+
 # ====== Info Section ======
 with st.expander("ℹ️ How It Works"):
     st.markdown("""
@@ -218,17 +261,11 @@ with st.expander("ℹ️ How It Works"):
 
     **No Repeats:** Domains are marked as "served" and won't appear again for the cooldown period.
 
-    **Email Generator:**
-    - Takes high-score domains and generates email addresses
-    - Uses common local parts (info, contact, sales, etc.)
-    - Similar to FindMassLeads functionality
-    - Export all emails to CSV
-
-    **FindMassLeads Style:**
-    - Enter any domain
-    - Finds emails for that domain AND related domains
-    - Uses keyword matching to find similar domains
-    - Export all found emails to CSV
+    **Email Generator Features:**
+    - **Generate Emails from Domains:** Uses your high-score domains
+    - **FindMassLeads Style:** Search any domain + related domains
+    - **Advanced Email Finder:** Combines both features in one click
+    - All features export to CSV
     """)
 
 with st.expander("🛠️ Third Party Sources Used"):
