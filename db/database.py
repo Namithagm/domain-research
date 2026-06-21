@@ -158,11 +158,14 @@ def count_domains_without_age():
 def reset_all_served():
     """Reset all served status (for testing)"""
     try:
+        # Update ALL domains - use a condition that always evaluates to true
         supabase.table("domains").update({
             "last_served": None,
             "times_served": 0
-        }).execute()
-        supabase.table("served_log").delete().execute()
+        }).neq("domain_name", "").execute()  # This updates ALL rows
+        
+        # Delete ALL served_log entries
+        supabase.table("served_log").delete().neq("domain_name", "").execute()
         return True
     except Exception as e:
         print(f"Reset served error: {e}")
