@@ -60,6 +60,46 @@ COMMON_LOCAL_PARTS = [
     "cfo", "cto", "coo", "cio", "cmo", "cpo", "cso", "svp", "vp"
 ]
 
+# Sample related domains for popular domains (like FindMassLeads)
+SAMPLE_RELATED = {
+    'square-enix.com': ['square-enix-games.com', 'squareenix.com', 'square-enix.co.uk', 'square-enix.net'],
+    'google.com': ['google.co.uk', 'google.ca', 'google.com.au', 'google.fr', 'google.de'],
+    'microsoft.com': ['microsoft.co.uk', 'microsoft.ca', 'microsoft.net', 'microsoft.org'],
+    'amazon.com': ['amazon.co.uk', 'amazon.ca', 'amazon.de', 'amazon.fr', 'amazon.in'],
+    'apple.com': ['apple.co.uk', 'apple.ca', 'apple.com.au', 'apple.de'],
+    'facebook.com': ['facebook.co.uk', 'facebook.ca', 'facebook.net'],
+    'twitter.com': ['twitter.co.uk', 'twitter.ca', 'twitter.com.au'],
+    'linkedin.com': ['linkedin.co.uk', 'linkedin.ca', 'linkedin.com.au'],
+    'youtube.com': ['youtube.co.uk', 'youtube.ca', 'youtube.com.au'],
+    'instagram.com': ['instagram.co.uk', 'instagram.ca', 'instagram.com.au'],
+    'github.com': ['github.io', 'github.co.uk', 'githubusercontent.com'],
+    'stackoverflow.com': ['stackoverflow.co.uk', 'stackexchange.com'],
+    'reddit.com': ['reddit.co.uk', 'reddit.ca', 'reddit.com.au'],
+    'netflix.com': ['netflix.co.uk', 'netflix.ca', 'netflix.com.au'],
+    'spotify.com': ['spotify.co.uk', 'spotify.ca', 'spotify.com.au'],
+    'adobe.com': ['adobe.co.uk', 'adobe.ca', 'adobe.com.au'],
+    'salesforce.com': ['salesforce.co.uk', 'salesforce.ca', 'salesforce.com.au'],
+    'oracle.com': ['oracle.co.uk', 'oracle.ca', 'oracle.com.au'],
+    'ibm.com': ['ibm.co.uk', 'ibm.ca', 'ibm.com.au'],
+    'cisco.com': ['cisco.co.uk', 'cisco.ca', 'cisco.com.au'],
+    'intel.com': ['intel.co.uk', 'intel.ca', 'intel.com.au'],
+    'nvidia.com': ['nvidia.co.uk', 'nvidia.ca', 'nvidia.com.au'],
+    'amd.com': ['amd.co.uk', 'amd.ca', 'amd.com.au'],
+    'dell.com': ['dell.co.uk', 'dell.ca', 'dell.com.au'],
+    'hp.com': ['hp.co.uk', 'hp.ca', 'hp.com.au'],
+    'paypal.com': ['paypal.co.uk', 'paypal.ca', 'paypal.com.au'],
+    'stripe.com': ['stripe.co.uk', 'stripe.ca', 'stripe.com.au'],
+    'shopify.com': ['shopify.co.uk', 'shopify.ca', 'shopify.com.au'],
+    'wordpress.com': ['wordpress.org', 'wordpress.co.uk', 'wordpress.ca'],
+    'wix.com': ['wix.co.uk', 'wix.ca', 'wix.com.au'],
+    'squarespace.com': ['squarespace.co.uk', 'squarespace.ca', 'squarespace.com.au'],
+    'godaddy.com': ['godaddy.co.uk', 'godaddy.ca', 'godaddy.com.au'],
+    'namecheap.com': ['namecheap.co.uk', 'namecheap.ca', 'namecheap.com.au'],
+    'bluehost.com': ['bluehost.co.uk', 'bluehost.ca', 'bluehost.com.au'],
+    'hostgator.com': ['hostgator.co.uk', 'hostgator.ca', 'hostgator.com.au'],
+    'siteground.com': ['siteground.co.uk', 'siteground.ca', 'siteground.com.au'],
+}
+
 def extract_keywords(domain):
     """Extract keywords from domain name"""
     # Remove TLD (.com, .org, etc.)
@@ -68,16 +108,18 @@ def extract_keywords(domain):
     parts = re.split(r'[\.\-]', name)
     return parts
 
-def find_related_domains(domain, limit=20):
-    """Find domains related to the given domain"""
+def find_related_domains_from_db(domain, limit=20):
+    """Find domains related to the given domain from database"""
     keywords = extract_keywords(domain)
     
     related = []
     for keyword in keywords:
         if len(keyword) > 2:  # Skip short words
-            # Search for domains containing this keyword
-            result = supabase.table('domains').select('domain_name, score').like('domain_name', f'%{keyword}%').order('score', desc=True).limit(limit).execute()
-            related.extend(result.data)
+            try:
+                result = supabase.table('domains').select('domain_name, score').like('domain_name', f'%{keyword}%').order('score', desc=True).limit(limit).execute()
+                related.extend(result.data)
+            except:
+                pass
     
     # Remove duplicates and self
     seen = set()
@@ -88,6 +130,45 @@ def find_related_domains(domain, limit=20):
             unique.append(r)
     
     return unique[:limit]
+
+def get_related_domains_from_sample(domain, limit=5):
+    """Get related domains from sample data"""
+    # Check exact match
+    if domain in SAMPLE_RELATED:
+        return SAMPLE_RELATED[domain][:limit]
+    
+    # Check partial match
+    for key, related in SAMPLE_RELATED.items():
+        if key in domain or domain in key:
+            return related[:limit]
+    
+    # Try TLD variations
+    base = domain.replace('.com', '').replace('.org', '').replace('.net', '').replace('.co.uk', '')
+    tld_variations = ['.com', '.co.uk', '.org', '.net', '.io', '.gov', '.edu']
+    related = []
+    for tld in tld_variations:
+        variant = base + tld
+        if variant != domain:
+            related.append(variant)
+    
+    return related[:limit]
+
+def find_related_domains(domain, limit=10):
+    """Find domains related to the given domain (combines sample + database)"""
+    related_domains = []
+    
+    # 1. Try sample data first
+    sample_related = get_related_domains_from_sample(domain, limit)
+    related_domains.extend(sample_related)
+    
+    # 2. Try database if more needed
+    if len(related_domains) < limit:
+        db_related = find_related_domains_from_db(domain, limit - len(related_domains))
+        for r in db_related:
+            if r['domain_name'] not in related_domains:
+                related_domains.append(r['domain_name'])
+    
+    return related_domains[:limit]
 
 def generate_emails(domain, local_parts=None):
     """Generate emails for a domain using common local parts"""
@@ -112,17 +193,20 @@ def get_emails_with_related(domain, local_parts=None):
     
     all_results = []
     
-    # 1. Emails for exact domain (top 5 local parts)
+    # 1. Emails for exact domain (top 10 local parts, show 5)
     exact_emails = generate_emails(domain, local_parts[:10])
     for email in exact_emails[:5]:
         all_results.append((domain, email))
     
-    # 2. Emails for related domains (top 3 domains, top 3 emails each)
-    related = find_related_domains(domain, limit=10)
-    for r in related[:3]:  # Top 3 related
-        emails = generate_emails(r['domain_name'], local_parts[:10])
-        for email in emails[:3]:  # Top 3 emails each
-            all_results.append((r['domain_name'], email))
+    # 2. Find related domains
+    related_domains = find_related_domains(domain, limit=5)
+    
+    # 3. Generate emails for related domains (top 3 each)
+    for related_domain in related_domains:
+        if related_domain != domain:
+            emails = generate_emails(related_domain, local_parts[:10])
+            for email in emails[:3]:
+                all_results.append((related_domain, email))
     
     return all_results
 
