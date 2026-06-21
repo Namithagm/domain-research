@@ -84,6 +84,78 @@ if st.button("🚀 Get Fresh Domains", type="primary", use_container_width=True)
 
 st.divider()
 
+# ====== Email Generator Section ======
+st.subheader("📧 Generate Emails from Domains")
+
+st.markdown("""
+Generate email addresses for your high-score domains using common local parts 
+(info@, contact@, sales@, etc.) - similar to FindMassLeads!
+""")
+
+col1, col2, col3 = st.columns([1, 1, 1])
+
+with col1:
+    email_domain_count = st.number_input("Number of Domains", 10, 500, 100, step=10)
+
+with col2:
+    email_min_score = st.slider("Min Score for Emails", 0, 100, 70, key="email_min_score")
+
+with col3:
+    email_cooldown = st.slider("Cooldown for Emails", 0, 90, 1, key="email_cooldown")
+
+if st.button("📧 Generate Emails", type="secondary", use_container_width=True):
+    with st.spinner("Generating emails from high-score domains..."):
+        try:
+            # Get high-score domains
+            rows = get_fresh_domains(email_domain_count, email_min_score, email_cooldown)
+            
+            if not rows:
+                st.warning("No domains found matching your criteria. Try lowering the minimum score.")
+            else:
+                domains = [r['domain_name'] for r in rows]
+                
+                # Import email generator
+                import sys
+                import os
+                sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+                from email_generator import generate_emails_for_domains, COMMON_LOCAL_PARTS
+                
+                # Generate emails
+                emails = generate_emails_for_domains(domains)
+                
+                st.success(f"✅ Generated {len(emails)} emails from {len(domains)} domains")
+                
+                # Show stats
+                st.info(f"📊 {len(domains)} domains × {len(COMMON_LOCAL_PARTS)} local parts = {len(emails)} total emails")
+                
+                # Show sample emails
+                with st.expander("📧 Sample Emails (first 20)"):
+                    sample_emails = emails[:20]
+                    st.write("\n".join(sample_emails))
+                
+                # Create DataFrame for download
+                df_emails = pd.DataFrame(emails, columns=['Email'])
+                
+                # Download button
+                st.download_button(
+                    label="📥 Download Emails CSV",
+                    data=df_emails.to_csv(index=False),
+                    file_name=f"emails_{date.today()}_{uuid.uuid4().hex[:8]}.csv",
+                    mime="text/csv"
+                )
+                
+                # Also show domains used
+                with st.expander("📋 Domains Used"):
+                    st.write("\n".join(domains[:20]))
+                    if len(domains) > 20:
+                        st.write(f"... and {len(domains) - 20} more")
+                        
+        except Exception as e:
+            st.error(f"Error generating emails: {e}")
+            st.info("Make sure email_generator.py exists in your project folder.")
+
+st.divider()
+
 # ====== Info Section ======
 with st.expander("ℹ️ How It Works"):
     st.markdown("""
@@ -99,6 +171,12 @@ with st.expander("ℹ️ How It Works"):
     - **Minimum pass:** 70/100
 
     **No Repeats:** Domains are marked as "served" and won't appear again for the cooldown period.
+
+    **Email Generator:**
+    - Takes high-score domains and generates email addresses
+    - Uses common local parts (info, contact, sales, etc.)
+    - Similar to FindMassLeads functionality
+    - Export all emails to CSV
     """)
 
 with st.expander("🛠️ Third Party Sources Used"):
