@@ -84,167 +84,6 @@ if st.button("🚀 Get Fresh Domains", type="primary", use_container_width=True)
 
 st.divider()
 
-# ====== Email Generator Section ======
-st.subheader("📧 Generate Emails from Domains")
-
-st.markdown("""
-Generate email addresses for your high-score domains using common local parts 
-(info@, contact@, sales@, etc.) - similar to FindMassLeads!
-""")
-
-col1, col2, col3 = st.columns([1, 1, 1])
-
-with col1:
-    email_domain_count = st.number_input("Number of Domains", 10, 500, 100, step=10)
-
-with col2:
-    email_min_score = st.slider("Min Score for Emails", 0, 100, 70, key="email_min_score")
-
-with col3:
-    email_cooldown = st.slider("Cooldown for Emails", 0, 90, 1, key="email_cooldown")
-
-if st.button("📧 Generate Emails", type="secondary", use_container_width=True):
-    with st.spinner("Generating emails from high-score domains..."):
-        try:
-            # Get high-score domains
-            rows = get_fresh_domains(email_domain_count, email_min_score, email_cooldown)
-            
-            if not rows:
-                st.warning("No domains found matching your criteria. Try lowering the minimum score.")
-            else:
-                domains = [r['domain_name'] for r in rows]
-                
-                # Import email generator
-                import sys
-                import os
-                sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-                from email_generator import generate_emails_for_domains, COMMON_LOCAL_PARTS
-                
-                # Generate emails
-                emails = generate_emails_for_domains(domains)
-                
-                st.success(f"✅ Generated {len(emails)} emails from {len(domains)} domains")
-                
-                # Show stats
-                st.info(f"📊 {len(domains)} domains × {len(COMMON_LOCAL_PARTS)} local parts = {len(emails)} total emails")
-                
-                # Show sample emails
-                with st.expander("📧 Sample Emails (first 20)"):
-                    sample_emails = emails[:20]
-                    st.write("\n".join(sample_emails))
-                
-                # Create DataFrame for download
-                df_emails = pd.DataFrame(emails, columns=['Email'])
-                
-                # Download button
-                st.download_button(
-                    label="📥 Download Emails CSV",
-                    data=df_emails.to_csv(index=False),
-                    file_name=f"emails_{date.today()}_{uuid.uuid4().hex[:8]}.csv",
-                    mime="text/csv"
-                )
-                
-                # Also show domains used
-                with st.expander("📋 Domains Used"):
-                    st.write("\n".join(domains[:20]))
-                    if len(domains) > 20:
-                        st.write(f"... and {len(domains) - 20} more")
-                        
-        except Exception as e:
-            st.error(f"Error generating emails: {e}")
-            st.info("Make sure email_generator.py exists in your project folder.")
-
-st.divider()
-
-# ====== FindMassLeads Style Email Finder ======
-st.subheader("🔍 FindMassLeads Style - Email Finder")
-
-st.markdown("""
-Find emails for a domain AND related domains (like FindMassLeads!).
-Enter a domain and we'll find emails for it and similar domains.
-""")
-
-search_domain = st.text_input("Enter a domain (e.g., ashford.gov.uk)", placeholder="domain.com")
-
-if st.button("🔍 Find Emails with Related Domains", type="secondary"):
-    if search_domain:
-        with st.spinner(f"Searching for emails related to {search_domain}..."):
-            try:
-                from email_generator import get_emails_with_related, COMMON_LOCAL_PARTS
-                
-                results = get_emails_with_related(search_domain, COMMON_LOCAL_PARTS)
-                
-                if results:
-                    st.success(f"✅ Found {len(results)} emails")
-                    
-                    # Group by domain
-                    data = []
-                    for domain, email in results:
-                        data.append({'Domain': domain, 'Email': email})
-                    
-                    df = pd.DataFrame(data)
-                    st.dataframe(df, use_container_width=True)
-                    
-                    # Download CSV
-                    st.download_button(
-                        label="📥 Download Emails CSV",
-                        data=df.to_csv(index=False),
-                        file_name=f"emails_related_{search_domain}_{date.today()}.csv",
-                        mime="text/csv"
-                    )
-                else:
-                    st.warning("No emails found. Try another domain.")
-            except Exception as e:
-                st.error(f"Error: {e}")
-                st.info("Make sure email_generator.py exists in your project folder.")
-    else:
-        st.warning("Please enter a domain.")
-
-st.divider()
-
-# ====== Combined Email Finder ======
-st.subheader("🔍 Advanced Email Finder")
-
-st.markdown("""
-Find emails for your high-score domains AND related domains.
-This combines both features in one click!
-""")
-
-if st.button("🚀 Find All Emails (Domains + Related)", type="primary"):
-    with st.spinner("Finding emails from high-score domains and related domains..."):
-        try:
-            # 1. Get high-score domains
-            rows = get_fresh_domains(50, 70, 1)
-            
-            if rows:
-                domains = [r['domain_name'] for r in rows]
-                all_results = []
-                
-                # 2. For each domain, find related emails
-                from email_generator import get_emails_with_related, COMMON_LOCAL_PARTS
-                
-                for domain in domains[:10]:  # Limit to 10 domains for speed
-                    results = get_emails_with_related(domain, COMMON_LOCAL_PARTS)
-                    all_results.extend(results)
-                
-                # 3. Display results
-                df = pd.DataFrame(all_results, columns=['Domain', 'Email'])
-                st.success(f"✅ Found {len(df)} emails from {len(domains)} domains")
-                st.dataframe(df, use_container_width=True)
-                
-                st.download_button(
-                    label="📥 Download All Emails CSV",
-                    data=df.to_csv(index=False),
-                    file_name=f"all_emails_{date.today()}.csv",
-                    mime="text/csv"
-                )
-            else:
-                st.warning("No high-score domains found.")
-        except Exception as e:
-            st.error(f"Error: {e}")
-
-st.divider()
-
 # ====== Check Your Own Domain ======
 st.subheader("🔍 Check Your Own Domain")
 
@@ -349,6 +188,54 @@ with tab2:
 
 st.divider()
 
+# ====== Legitimate Email Finder ======
+st.subheader("✅ Legitimate Email Finder")
+
+st.markdown("""
+**No guessing!** This feature finds REAL emails from the domain's website:
+- Searches contact/about pages
+- Extracts emails from public pages
+- No random generation
+- Only verified sources
+""")
+
+legit_domain = st.text_input("Enter a domain to find real emails", placeholder="example.com")
+
+if st.button("🔍 Find Real Emails", type="primary"):
+    if legit_domain:
+        with st.spinner(f"Searching for real emails on {legit_domain}..."):
+            try:
+                from legitimate_email_finder import discover_emails_for_domain
+                results = discover_emails_for_domain(legit_domain)
+                
+                if results['emails']:
+                    st.success(f"✅ Found {len(results['emails'])} real emails")
+                    
+                    # Display emails
+                    df = pd.DataFrame(results['emails'], columns=['Email'])
+                    st.dataframe(df, use_container_width=True)
+                    
+                    # Show sources
+                    with st.expander("📋 Sources"):
+                        st.write(results['sources'])
+                    
+                    # Download
+                    st.download_button(
+                        label="📥 Download Real Emails CSV",
+                        data=df.to_csv(index=False),
+                        file_name=f"real_emails_{legit_domain}_{date.today()}.csv",
+                        mime="text/csv"
+                    )
+                else:
+                    st.warning(f"No emails found on {legit_domain}.")
+            except Exception as e:
+                st.error(f"Error: {e}")
+                st.info("Make sure legitimate_email_finder.py exists in your project folder.")
+    else:
+        st.warning("Please enter a domain.")
+
+st.divider()
+
 # ====== Info Section ======
 with st.expander("ℹ️ How It Works"):
     st.markdown("""
@@ -371,11 +258,11 @@ with st.expander("ℹ️ How It Works"):
     - Same scoring system as the research tool
     - Export results to CSV
 
-    **Email Generator Features:**
-    - **Generate Emails from Domains:** Uses your high-score domains
-    - **FindMassLeads Style:** Search any domain + related domains
-    - **Advanced Email Finder:** Combines both features in one click
-    - All features export to CSV
+    **Legitimate Email Finder:**
+    - Finds REAL emails from websites (no guessing!)
+    - Searches contact pages, about pages, and team pages
+    - Only returns emails that are publicly available
+    - Export results to CSV
     """)
 
 with st.expander("🛠️ Third Party Sources Used"):
