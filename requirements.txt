@@ -8,3 +8,5 @@ schedule
 whois
 pytz
 matplotlib
+beautifulsoup4
+python-whois
