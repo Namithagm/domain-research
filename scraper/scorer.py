@@ -48,22 +48,22 @@ def get_domain_age(domain):
 def get_age_points(age):
     """Convert domain age to points"""
     if age is None:
-        return 5  # Unknown = neutral
+        return 5
     elif age >= 10:
-        return 15  # Very old, trusted
+        return 15
     elif age >= 5:
-        return 10  # Established
+        return 10
     elif age >= 2:
-        return 5   # Average
+        return 5
     else:
-        return 0   # New domain
+        return 0
 
 def score_domain(data):
     """Calculate final domain score out of 100"""
     score = 0
     max_possible = 0
 
-    # ====== DMARC Score (max 60) ======
+    # DMARC Score (max 60)
     dmarc = data.get("dmarc_policy", "missing")
     if dmarc == "none":
         score += 60
@@ -73,7 +73,7 @@ def score_domain(data):
         score += 50
     max_possible += 60
 
-    # ====== Spamhaus Score (max 40) ======
+    # Spamhaus Score (max 40)
     spamhaus = data.get("spamhaus_clean")
     if spamhaus == True:
         score += 40
@@ -81,7 +81,7 @@ def score_domain(data):
         score += 25
     max_possible += 40
 
-    # ====== Talos Score (max 30) ======
+    # Talos Score (max 30)
     talos = data.get("talos_clean")
     if talos == True:
         score += 30
@@ -89,7 +89,7 @@ def score_domain(data):
         score += 10
     max_possible += 30
 
-    # ====== Barracuda Score (max 20) ======
+    # Barracuda Score (max 20)
     barracuda = data.get("barracuda_clean")
     if barracuda == True:
         score += 20
@@ -97,7 +97,7 @@ def score_domain(data):
         score += 10
     max_possible += 20
 
-    # ====== VirusTotal Score (max 25) ======
+    # VirusTotal Score (max 25)
     vt = data.get("vt_clean")
     if vt == True:
         score += 25
@@ -105,7 +105,7 @@ def score_domain(data):
         score += 10
     max_possible += 25
 
-    # ====== AbuseIPDB Score (max 15) ======
+    # AbuseIPDB Score (max 15)
     abuse = data.get("abuse_clean")
     if abuse == True:
         score += 15
@@ -113,7 +113,7 @@ def score_domain(data):
         score += 5
     max_possible += 15
 
-    # ====== URLVoid Score (max 10) ======
+    # URLVoid Score (max 10)
     urlvoid = data.get("urlvoid_clean")
     if urlvoid == True:
         score += 10
@@ -121,7 +121,7 @@ def score_domain(data):
         score += 5
     max_possible += 10
 
-    # ====== Domain Age Score (max 15) ======
+    # Domain Age Score (max 15)
     age = data.get("domain_age_years")
     age_points = get_age_points(age)
     score += age_points

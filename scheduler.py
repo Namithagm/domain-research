@@ -35,31 +35,34 @@ def run_scrape():
             print(f"  Spamhaus for {domain}: {spamhaus_data}")
             data.update(spamhaus_data)
             
-            # Step 4: Talos
+            # Step 4: Talos (fast)
             data.update(check_talos(domain))
             
-            # Step 5: Barracuda
+            # Step 5: Barracuda (fast)
             data.update(check_barracuda(domain))
             
-            # Step 6: VirusTotal
-            data.update(check_virustotal(domain))
+            # Step 6: VirusTotal (DISABLED to avoid rate limits)
+            # data.update(check_virustotal(domain))
+            data.update({"vt_clean": None, "vt_malicious_count": None, "vt_suspicious_count": None, "vt_total_scans": None})
             
-            # Step 7: AbuseIPDB
-            data.update(check_abuseipdb(domain))
+            # Step 7: AbuseIPDB (DISABLED)
+            # data.update(check_abuseipdb(domain))
+            data.update({"abuse_score": None, "abuse_clean": None, "abuse_reports": None})
             
-            # Step 8: URLVoid
-            data.update(check_urlvoid(domain))
+            # Step 8: URLVoid (DISABLED)
+            # data.update(check_urlvoid(domain))
+            data.update({"urlvoid_clean": None})
             
-            # Step 9: Domain Age (with timeout handling)
+            # Step 9: Domain Age (with timeout)
             try:
                 domain_age = get_domain_age(domain)
                 data["domain_age_years"] = domain_age
                 if domain_age:
                     print(f"  Domain Age: {domain_age} years")
                 else:
-                    print(f"  Domain Age: Unknown (skipped)")
+                    print(f"  Domain Age: Unknown")
             except Exception as e:
-                print(f"  Domain Age: Error - {e}")
+                print(f"  Domain Age: Error")
                 data["domain_age_years"] = None
             
             # Step 10: Final Score
@@ -67,7 +70,7 @@ def run_scrape():
             data["last_checked"] = str(date.today())
             
             # Step 11: Save
-            print(f"  Saving: {domain} | Spamhaus: {data.get('spamhaus_clean')} | Age: {domain_age} yrs | Score: {data['score']}")
+            print(f"  Saving: {domain} | Spamhaus: {data.get('spamhaus_clean')} | Score: {data['score']}")
             save_domain(data)
             stored += 1
             

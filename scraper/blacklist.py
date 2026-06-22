@@ -1,24 +1,29 @@
 import dns.resolver
+import dns.exception
 
 def check_surbl(domain):
-    """Check SURBL blacklist via DNS"""
+    """Check SURBL blacklist via DNS with timeout"""
     try:
         dns.resolver.resolve(f"{domain}.multi.surbl.org", "A", lifetime=3)
-        return True  # listed = bad
+        return True
     except dns.resolver.NXDOMAIN:
-        return False  # not listed = good
+        return False
+    except dns.exception.Timeout:
+        return None
     except:
-        return None  # unknown
+        return None
 
 def check_uribl(domain):
-    """Check URIBL blacklist via DNS"""
+    """Check URIBL blacklist via DNS with timeout"""
     try:
         dns.resolver.resolve(f"{domain}.black.uribl.com", "A", lifetime=3)
-        return True  # listed = bad
+        return True
     except dns.resolver.NXDOMAIN:
-        return False  # not listed = good
+        return False
+    except dns.exception.Timeout:
+        return None
     except:
-        return None  # unknown
+        return None
 
 def check_blacklist(domain):
     """Combined blacklist check"""

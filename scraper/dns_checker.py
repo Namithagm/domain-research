@@ -1,10 +1,13 @@
 import dns.resolver
+import dns.exception
 
 def check_mx(domain):
     """Check if domain has MX record with timeout"""
     try:
         dns.resolver.resolve(domain, "MX", lifetime=3)
         return True
+    except dns.exception.Timeout:
+        return False
     except:
         return False
 
@@ -13,6 +16,8 @@ def check_spf(domain):
     try:
         txts = dns.resolver.resolve(domain, "TXT", lifetime=3)
         return any("v=spf1" in r.to_text() for r in txts)
+    except dns.exception.Timeout:
+        return False
     except:
         return False
 
@@ -28,6 +33,8 @@ def check_dmarc(domain):
                 return "quarantine"
             elif "p=none" in txt:
                 return "none"
+        return "missing"
+    except dns.exception.Timeout:
         return "missing"
     except:
         return "missing"

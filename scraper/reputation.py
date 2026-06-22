@@ -41,7 +41,7 @@ def check_virustotal(domain):
     try:
         url = f"https://www.virustotal.com/api/v3/domains/{domain}"
         headers = {"x-apikey": VT_API_KEY}
-        r = requests.get(url, headers=headers, timeout=15)
+        r = requests.get(url, headers=headers, timeout=10)
         
         if r.status_code == 200:
             data = r.json()
@@ -59,7 +59,7 @@ def check_virustotal(domain):
         return {"vt_clean": None, "vt_malicious_count": None, "vt_suspicious_count": None, "vt_total_scans": None}
     except requests.Timeout:
         return {"vt_clean": None, "vt_malicious_count": None, "vt_suspicious_count": None, "vt_total_scans": None}
-    except Exception as e:
+    except:
         return {"vt_clean": None, "vt_malicious_count": None, "vt_suspicious_count": None, "vt_total_scans": None}
 
 def check_abuseipdb(domain):
@@ -71,7 +71,7 @@ def check_abuseipdb(domain):
         url = "https://api.abuseipdb.com/api/v2/check"
         headers = {"Key": ABUSEIPDB_KEY, "Accept": "application/json"}
         params = {"ipAddress": domain}
-        r = requests.get(url, headers=headers, params=params, timeout=15)
+        r = requests.get(url, headers=headers, params=params, timeout=10)
         
         if r.status_code == 200:
             data = r.json()["data"]
