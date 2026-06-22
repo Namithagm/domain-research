@@ -245,6 +245,110 @@ if st.button("🚀 Find All Emails (Domains + Related)", type="primary"):
 
 st.divider()
 
+# ====== Check Your Own Domain ======
+st.subheader("🔍 Check Your Own Domain")
+
+st.markdown("""
+Check the reputation of your own domains using the same powerful scoring system!
+- **Single domain:** Enter one domain
+- **Bulk upload:** Upload a CSV or TXT file with one domain per line
+""")
+
+tab1, tab2 = st.tabs(["📌 Single Domain", "📂 Bulk Upload"])
+
+with tab1:
+    own_domain = st.text_input("Enter a domain to check", placeholder="example.com")
+    
+    if st.button("🔍 Check Domain", type="primary"):
+        if own_domain:
+            with st.spinner(f"Checking {own_domain}..."):
+                try:
+                    from domain_checker import check_single_domain
+                    result = check_single_domain(own_domain)
+                    
+                    if "error" in result:
+                        st.error(f"Error: {result['error']}")
+                    else:
+                        # Display results
+                        st.success(f"✅ Check complete for {own_domain}")
+                        
+                        # Score with color
+                        score = result.get('score', 0)
+                        if score >= 70:
+                            st.success(f"⭐ Score: {score}/100 - Good reputation")
+                        elif score >= 50:
+                            st.warning(f"⚠️ Score: {score}/100 - Average reputation")
+                        else:
+                            st.error(f"❌ Score: {score}/100 - Poor reputation")
+                        
+                        # Show details in table
+                        details = {
+                            "Domain": result.get('domain_name'),
+                            "Score": result.get('score'),
+                            "DMARC Policy": result.get('dmarc_policy'),
+                            "Has MX": result.get('has_mx'),
+                            "Has SPF": result.get('has_spf'),
+                            "Spamhaus Clean": result.get('spamhaus_clean'),
+                            "Domain Age": f"{result.get('domain_age_years', 'Unknown')} years" if result.get('domain_age_years') else "Unknown",
+                            "Blacklisted": result.get('is_blacklisted'),
+                            "Talos Score": result.get('talos_score'),
+                            "Barracuda Status": result.get('barracuda_status'),
+                            "VirusTotal Clean": result.get('vt_clean'),
+                            "Abuse Score": result.get('abuse_score')
+                        }
+                        
+                        df_details = pd.DataFrame([details])
+                        st.dataframe(df_details.T, use_container_width=True)
+                        
+                except Exception as e:
+                    st.error(f"Error: {e}")
+        else:
+            st.warning("Please enter a domain.")
+
+with tab2:
+    st.write("Upload a CSV or TXT file with one domain per line")
+    
+    uploaded_file = st.file_uploader("Choose a file", type=['csv', 'txt'])
+    
+    if uploaded_file is not None:
+        # Read file
+        if uploaded_file.name.endswith('.csv'):
+            df = pd.read_csv(uploaded_file)
+            domains = df.iloc[:, 0].tolist()
+        else:
+            domains = uploaded_file.read().decode('utf-8').splitlines()
+        
+        domains = [d.strip() for d in domains if d.strip()]
+        st.info(f"📊 Found {len(domains)} domains")
+        
+        # Show first 10 domains
+        with st.expander("📋 Preview Domains"):
+            st.write(domains[:10])
+            if len(domains) > 10:
+                st.write(f"... and {len(domains) - 10} more")
+        
+        if st.button("🚀 Check All Domains", type="primary"):
+            with st.spinner(f"Checking {len(domains)} domains..."):
+                try:
+                    from domain_checker import check_bulk_domains
+                    results_df = check_bulk_domains(domains)
+                    
+                    st.success(f"✅ Checked {len(results_df)} domains")
+                    st.dataframe(results_df, use_container_width=True)
+                    
+                    # Download button
+                    csv = results_df.to_csv(index=False)
+                    st.download_button(
+                        label="📥 Download Report CSV",
+                        data=csv,
+                        file_name=f"domain_report_{date.today()}.csv",
+                        mime="text/csv"
+                    )
+                except Exception as e:
+                    st.error(f"Error: {e}")
+
+st.divider()
+
 # ====== Info Section ======
 with st.expander("ℹ️ How It Works"):
     st.markdown("""
@@ -260,6 +364,12 @@ with st.expander("ℹ️ How It Works"):
     - **Minimum pass:** 70/100
 
     **No Repeats:** Domains are marked as "served" and won't appear again for the cooldown period.
+
+    **Check Your Own Domain:**
+    - Enter any domain or upload a list
+    - Get full reputation report
+    - Same scoring system as the research tool
+    - Export results to CSV
 
     **Email Generator Features:**
     - **Generate Emails from Domains:** Uses your high-score domains
