@@ -21,7 +21,7 @@ COMMON_LOCAL_PARTS = [
     "admin", "office", "business", "team", "inbox", "mail",
     "hr", "finance", "marketing", "pr", "media", "press", "editor",
     "enquiries", "partners", "affiliates", "customerservice",
-    # Names (A-Z)
+    # Names
     "aaron", "abby", "abigail", "adam", "adrian", "aiden", "alan", "albert",
     "alex", "alexander", "alexis", "alice", "allison", "amanda", "amber",
     "amy", "andrew", "angela", "anna", "anne", "anthony", "april", "ashley",
@@ -55,20 +55,14 @@ COMMON_LOCAL_PARTS = [
 
 # All TLDs to generate variations
 TLD_LIST = [
-    # Original domains
     '.com', '.org', '.net', '.io', '.gov', '.edu',
-    # European
     '.uk', '.co.uk', '.de', '.fr', '.es', '.it', '.nl', '.se', '.no', '.dk', '.fi',
     '.pl', '.cz', '.hu', '.ro', '.bg', '.gr', '.pt', '.at', '.ch', '.be',
-    # Asia Pacific
     '.in', '.co.in', '.sg', '.com.sg', '.my', '.com.my', '.ph', '.vn', '.th', '.id',
     '.com.au', '.au', '.nz', '.co.nz',
-    # Americas
     '.br', '.com.br', '.ar', '.com.ar', '.mx', '.com.mx', '.cl', '.co', '.pe',
     '.ve', '.uy', '.py', '.ca',
-    # Middle East
     '.tr', '.com.tr', '.il', '.co.il', '.sa', '.com.sa', '.ae', '.eg',
-    # Others
     '.ru', '.ua', '.kz', '.za', '.co.za', '.eu', '.asia',
     '.info', '.biz', '.me', '.tv'
 ]
@@ -84,11 +78,7 @@ SAMPLE_RELATED = {
         'google.ru', 'google.ua', 'google.tr', 'google.co.il', 'google.ae',
         'google.co.za', 'google.eg', 'google.eu', 'google.info', 'google.biz',
         'google.ch', 'google.at', 'google.be', 'google.dk', 'google.fi',
-        'google.no', 'google.pt', 'google.gr', 'google.sk', 'google.bg',
-        'google.hr', 'google.si', 'google.lt', 'google.lv', 'google.ee',
-        'google.com.ph', 'google.com.my', 'google.co.id', 'google.com.bd',
-        'google.com.pk', 'google.com.ng', 'google.com.pe', 'google.com.ve',
-        'google.com.co', 'google.cl', 'google.com.uy', 'google.com.py'
+        'google.no', 'google.pt', 'google.gr'
     ],
     'microsoft.com': [
         'microsoft.co.uk', 'microsoft.ca', 'microsoft.com.au', 'microsoft.fr',
@@ -98,9 +88,7 @@ SAMPLE_RELATED = {
         'microsoft.cl', 'microsoft.co.in', 'microsoft.com.sg', 'microsoft.eu',
         'microsoft.ch', 'microsoft.at', 'microsoft.be', 'microsoft.dk',
         'microsoft.fi', 'microsoft.no', 'microsoft.pt', 'microsoft.gr',
-        'microsoft.ru', 'microsoft.ua', 'microsoft.tr', 'microsoft.co.il',
-        'microsoft.ae', 'microsoft.co.za', 'microsoft.com.ph', 'microsoft.com.my',
-        'microsoft.co.id', 'microsoft.com.bd', 'microsoft.com.pk', 'microsoft.com.ng'
+        'microsoft.ru', 'microsoft.ua', 'microsoft.tr', 'microsoft.co.il'
     ],
     'amazon.com': [
         'amazon.co.uk', 'amazon.ca', 'amazon.com.au', 'amazon.fr', 'amazon.de',
@@ -109,8 +97,7 @@ SAMPLE_RELATED = {
         'amazon.com.mx', 'amazon.cl', 'amazon.co.in', 'amazon.com.sg',
         'amazon.ae', 'amazon.eu', 'amazon.ch', 'amazon.at', 'amazon.be',
         'amazon.dk', 'amazon.fi', 'amazon.no', 'amazon.pt', 'amazon.gr',
-        'amazon.com.tr', 'amazon.co.il', 'amazon.co.za', 'amazon.com.ph',
-        'amazon.com.my', 'amazon.co.id', 'amazon.com.bd'
+        'amazon.com.tr', 'amazon.co.il', 'amazon.co.za'
     ],
     'apple.com': [
         'apple.co.uk', 'apple.ca', 'apple.com.au', 'apple.fr', 'apple.de',
@@ -129,8 +116,7 @@ SAMPLE_RELATED = {
         'facebook.com.sg', 'facebook.eu', 'facebook.ch', 'facebook.at',
         'facebook.be', 'facebook.dk', 'facebook.fi', 'facebook.no',
         'facebook.pt', 'facebook.gr', 'facebook.ae', 'facebook.co.za',
-        'facebook.com.tr', 'facebook.co.il', 'facebook.com.ph',
-        'facebook.com.my', 'facebook.co.id'
+        'facebook.com.tr', 'facebook.co.il'
     ],
     'twitter.com': [
         'twitter.co.uk', 'twitter.ca', 'twitter.fr', 'twitter.de',
@@ -171,24 +157,6 @@ SAMPLE_RELATED = {
         'youtube.be', 'youtube.dk', 'youtube.fi', 'youtube.no',
         'youtube.pt', 'youtube.gr', 'youtube.ae', 'youtube.co.za',
         'youtube.com.tr', 'youtube.co.il'
-    ],
-    'whatsapp.com': [
-        'whatsapp.co.uk', 'whatsapp.ca', 'whatsapp.fr', 'whatsapp.de',
-        'whatsapp.es', 'whatsapp.it', 'whatsapp.nl', 'whatsapp.pl',
-        'whatsapp.br', 'whatsapp.ar', 'whatsapp.com.mx', 'whatsapp.co.in',
-        'whatsapp.com.sg', 'whatsapp.eu', 'whatsapp.ch', 'whatsapp.at'
-    ],
-    'netflix.com': [
-        'netflix.co.uk', 'netflix.ca', 'netflix.fr', 'netflix.de',
-        'netflix.es', 'netflix.it', 'netflix.nl', 'netflix.pl',
-        'netflix.br', 'netflix.ar', 'netflix.com.mx', 'netflix.co.in',
-        'netflix.com.sg', 'netflix.eu', 'netflix.ch', 'netflix.at'
-    ],
-    'spotify.com': [
-        'spotify.co.uk', 'spotify.ca', 'spotify.fr', 'spotify.de',
-        'spotify.es', 'spotify.it', 'spotify.nl', 'spotify.pl',
-        'spotify.br', 'spotify.ar', 'spotify.com.mx', 'spotify.co.in',
-        'spotify.com.sg', 'spotify.eu', 'spotify.ch', 'spotify.at'
     ],
     # ====== Tech Companies ======
     'adobe.com': [
@@ -270,12 +238,6 @@ SAMPLE_RELATED = {
         'shopify.br', 'shopify.ar', 'shopify.com.mx', 'shopify.co.in',
         'shopify.com.sg', 'shopify.eu'
     ],
-    'square.com': [
-        'square.co.uk', 'square.ca', 'square.fr', 'square.de',
-        'square.es', 'square.it', 'square.nl', 'square.pl',
-        'square.br', 'square.ar', 'square.com.mx', 'square.co.in',
-        'square.com.sg', 'square.eu'
-    ],
     # ====== Hosting & Domains ======
     'wordpress.com': [
         'wordpress.org', 'wordpress.co.uk', 'wordpress.ca', 'wordpress.fr',
@@ -313,18 +275,6 @@ SAMPLE_RELATED = {
         'bluehost.br', 'bluehost.ar', 'bluehost.com.mx', 'bluehost.co.in',
         'bluehost.com.sg', 'bluehost.eu'
     ],
-    'hostgator.com': [
-        'hostgator.co.uk', 'hostgator.ca', 'hostgator.fr', 'hostgator.de',
-        'hostgator.es', 'hostgator.it', 'hostgator.nl', 'hostgator.pl',
-        'hostgator.br', 'hostgator.ar', 'hostgator.com.mx', 'hostgator.co.in',
-        'hostgator.com.sg', 'hostgator.eu'
-    ],
-    'siteground.com': [
-        'siteground.co.uk', 'siteground.ca', 'siteground.fr', 'siteground.de',
-        'siteground.es', 'siteground.it', 'siteground.nl', 'siteground.pl',
-        'siteground.br', 'siteground.ar', 'siteground.com.mx', 'siteground.co.in',
-        'siteground.com.sg', 'siteground.eu'
-    ],
     # ====== News & Media ======
     'cnn.com': [
         'cnn.co.uk', 'cnn.ca', 'cnn.fr', 'cnn.de',
@@ -344,18 +294,6 @@ SAMPLE_RELATED = {
         'nytimes.br', 'nytimes.ar', 'nytimes.com.mx', 'nytimes.co.in',
         'nytimes.com.sg', 'nytimes.eu'
     ],
-    'reuters.com': [
-        'reuters.co.uk', 'reuters.ca', 'reuters.fr', 'reuters.de',
-        'reuters.es', 'reuters.it', 'reuters.nl', 'reuters.pl',
-        'reuters.br', 'reuters.ar', 'reuters.com.mx', 'reuters.co.in',
-        'reuters.com.sg', 'reuters.eu'
-    ],
-    'bloomberg.com': [
-        'bloomberg.co.uk', 'bloomberg.ca', 'bloomberg.fr', 'bloomberg.de',
-        'bloomberg.es', 'bloomberg.it', 'bloomberg.nl', 'bloomberg.pl',
-        'bloomberg.br', 'bloomberg.ar', 'bloomberg.com.mx', 'bloomberg.co.in',
-        'bloomberg.com.sg', 'bloomberg.eu'
-    ],
     # ====== E-commerce ======
     'ebay.com': [
         'ebay.co.uk', 'ebay.ca', 'ebay.fr', 'ebay.de',
@@ -368,49 +306,6 @@ SAMPLE_RELATED = {
         'etsy.es', 'etsy.it', 'etsy.nl', 'etsy.pl',
         'etsy.br', 'etsy.ar', 'etsy.com.mx', 'etsy.co.in',
         'etsy.com.sg', 'etsy.eu'
-    ],
-    'alibaba.com': [
-        'alibaba.co.uk', 'alibaba.ca', 'alibaba.fr', 'alibaba.de',
-        'alibaba.es', 'alibaba.it', 'alibaba.nl', 'alibaba.pl',
-        'alibaba.br', 'alibaba.ar', 'alibaba.com.mx', 'alibaba.co.in',
-        'alibaba.com.sg', 'alibaba.eu'
-    ],
-    'aliexpress.com': [
-        'aliexpress.co.uk', 'aliexpress.ca', 'aliexpress.fr', 'aliexpress.de',
-        'aliexpress.es', 'aliexpress.it', 'aliexpress.nl', 'aliexpress.pl',
-        'aliexpress.br', 'aliexpress.ar', 'aliexpress.com.mx', 'aliexpress.co.in',
-        'aliexpress.com.sg', 'aliexpress.eu'
-    ],
-    # ====== Education ======
-    'harvard.edu': [
-        'harvard.com', 'harvard.org', 'harvard.co.uk', 'harvard.ca',
-        'harvard.fr', 'harvard.de', 'harvard.es', 'harvard.it',
-        'harvard.nl', 'harvard.pl', 'harvard.br', 'harvard.ar',
-        'harvard.com.mx', 'harvard.co.in', 'harvard.com.sg', 'harvard.eu'
-    ],
-    'stanford.edu': [
-        'stanford.com', 'stanford.org', 'stanford.co.uk', 'stanford.ca',
-        'stanford.fr', 'stanford.de', 'stanford.es', 'stanford.it',
-        'stanford.nl', 'stanford.pl', 'stanford.br', 'stanford.ar',
-        'stanford.com.mx', 'stanford.co.in', 'stanford.com.sg', 'stanford.eu'
-    ],
-    'mit.edu': [
-        'mit.com', 'mit.org', 'mit.co.uk', 'mit.ca',
-        'mit.fr', 'mit.de', 'mit.es', 'mit.it',
-        'mit.nl', 'mit.pl', 'mit.br', 'mit.ar',
-        'mit.com.mx', 'mit.co.in', 'mit.com.sg', 'mit.eu'
-    ],
-    'oxford.ac.uk': [
-        'oxford.com', 'oxford.org', 'oxford.co.uk', 'oxford.ca',
-        'oxford.fr', 'oxford.de', 'oxford.es', 'oxford.it',
-        'oxford.nl', 'oxford.pl', 'oxford.br', 'oxford.ar',
-        'oxford.com.mx', 'oxford.co.in', 'oxford.com.sg', 'oxford.eu'
-    ],
-    'cambridge.org': [
-        'cambridge.com', 'cambridge.co.uk', 'cambridge.ca',
-        'cambridge.fr', 'cambridge.de', 'cambridge.es', 'cambridge.it',
-        'cambridge.nl', 'cambridge.pl', 'cambridge.br', 'cambridge.ar',
-        'cambridge.com.mx', 'cambridge.co.in', 'cambridge.com.sg', 'cambridge.eu'
     ],
     # ====== Social Media ======
     'tiktok.com': [
@@ -437,12 +332,6 @@ SAMPLE_RELATED = {
         'reddit.br', 'reddit.ar', 'reddit.com.mx', 'reddit.co.in',
         'reddit.com.sg', 'reddit.eu'
     ],
-    'tumblr.com': [
-        'tumblr.co.uk', 'tumblr.ca', 'tumblr.fr', 'tumblr.de',
-        'tumblr.es', 'tumblr.it', 'tumblr.nl', 'tumblr.pl',
-        'tumblr.br', 'tumblr.ar', 'tumblr.com.mx', 'tumblr.co.in',
-        'tumblr.com.sg', 'tumblr.eu'
-    ],
     # ====== Major Brands ======
     'nike.com': [
         'nike.co.uk', 'nike.ca', 'nike.fr', 'nike.de',
@@ -456,31 +345,12 @@ SAMPLE_RELATED = {
         'adidas.br', 'adidas.ar', 'adidas.com.mx', 'adidas.co.in',
         'adidas.com.sg', 'adidas.eu'
     ],
-    'coca-cola.com': [
-        'coca-cola.co.uk', 'coca-cola.ca', 'coca-cola.fr', 'coca-cola.de',
-        'coca-cola.es', 'coca-cola.it', 'coca-cola.nl', 'coca-cola.pl',
-        'coca-cola.br', 'coca-cola.ar', 'coca-cola.com.mx', 'coca-cola.co.in',
-        'coca-cola.com.sg', 'coca-cola.eu'
-    ],
-    'pepsi.com': [
-        'pepsi.co.uk', 'pepsi.ca', 'pepsi.fr', 'pepsi.de',
-        'pepsi.es', 'pepsi.it', 'pepsi.nl', 'pepsi.pl',
-        'pepsi.br', 'pepsi.ar', 'pepsi.com.mx', 'pepsi.co.in',
-        'pepsi.com.sg', 'pepsi.eu'
-    ],
-    'mcdonalds.com': [
-        'mcdonalds.co.uk', 'mcdonalds.ca', 'mcdonalds.fr', 'mcdonalds.de',
-        'mcdonalds.es', 'mcdonalds.it', 'mcdonalds.nl', 'mcdonalds.pl',
-        'mcdonalds.br', 'mcdonalds.ar', 'mcdonalds.com.mx', 'mcdonalds.co.in',
-        'mcdonalds.com.sg', 'mcdonalds.eu'
-    ],
     'starbucks.com': [
         'starbucks.co.uk', 'starbucks.ca', 'starbucks.fr', 'starbucks.de',
         'starbucks.es', 'starbucks.it', 'starbucks.nl', 'starbucks.pl',
         'starbucks.br', 'starbucks.ar', 'starbucks.com.mx', 'starbucks.co.in',
         'starbucks.com.sg', 'starbucks.eu'
     ],
-    # ====== Automobile ======
     'tesla.com': [
         'tesla.co.uk', 'tesla.ca', 'tesla.fr', 'tesla.de',
         'tesla.es', 'tesla.it', 'tesla.nl', 'tesla.pl',
@@ -503,4 +373,122 @@ SAMPLE_RELATED = {
         'bmw.co.uk', 'bmw.ca', 'bmw.fr', 'bmw.de',
         'bmw.es', 'bmw.it', 'bmw.nl', 'bmw.pl',
         'bmw.br', 'bmw.ar', 'bmw.com.mx', 'bmw.co.in',
-        'bmw.com.sg', 'bm
+        'bmw.com.sg', 'bmw.eu'
+    ]
+}
+
+def extract_keywords(domain):
+    """Extract keywords from domain name"""
+    name = re.sub(r'\.[a-z]+$', '', domain)
+    parts = re.split(r'[\.\-]', name)
+    return parts
+
+def find_related_domains_from_db(domain, limit=20):
+    """Find domains related to the given domain from database"""
+    keywords = extract_keywords(domain)
+    related = []
+    for keyword in keywords:
+        if len(keyword) > 2:
+            try:
+                result = supabase.table('domains').select('domain_name, score').like('domain_name', f'%{keyword}%').order('score', desc=True).limit(limit).execute()
+                related.extend(result.data)
+            except:
+                pass
+    seen = set()
+    unique = []
+    for r in related:
+        if r['domain_name'] != domain and r['domain_name'] not in seen:
+            seen.add(r['domain_name'])
+            unique.append(r)
+    return unique[:limit]
+
+def get_related_domains_from_sample(domain, limit=15):
+    """Get related domains from sample data with all TLDs"""
+    for key, related in SAMPLE_RELATED.items():
+        if key in domain or domain in key:
+            return related[:limit]
+    base = domain.replace('.com', '').replace('.org', '').replace('.net', '')
+    base = base.replace('.co.uk', '').replace('.gov.uk', '').replace('.edu', '')
+    base = base.replace('.pl.com', '').replace('.pl.co.uk', '')
+    related = []
+    for tld in TLD_LIST:
+        variant = base + tld
+        if variant != domain and variant not in related:
+            related.append(variant)
+    return related[:limit]
+
+def find_related_domains(domain, limit=10):
+    """Find domains related to the given domain"""
+    related_domains = []
+    sample_related = get_related_domains_from_sample(domain, limit)
+    related_domains.extend(sample_related)
+    if len(related_domains) < limit:
+        db_related = find_related_domains_from_db(domain, limit - len(related_domains))
+        for r in db_related:
+            if r['domain_name'] not in related_domains:
+                related_domains.append(r['domain_name'])
+    return related_domains[:limit]
+
+def generate_emails(domain, local_parts=None):
+    """Generate emails for a domain using common local parts"""
+    if local_parts is None:
+        local_parts = COMMON_LOCAL_PARTS
+    return [f"{part}@{domain}" for part in local_parts]
+
+def generate_emails_for_domains(domains, local_parts=None):
+    """Generate emails for multiple domains"""
+    if local_parts is None:
+        local_parts = COMMON_LOCAL_PARTS
+    all_emails = []
+    for domain in domains:
+        emails = generate_emails(domain, local_parts)
+        all_emails.extend(emails)
+    return all_emails
+
+def get_emails_with_related(domain, local_parts=None):
+    """Get emails for domain + related domains (FindMassLeads style)"""
+    if local_parts is None:
+        local_parts = COMMON_LOCAL_PARTS
+    
+    all_results = []
+    
+    # 1. Emails for exact domain
+    exact_emails = generate_emails(domain, local_parts[:10])
+    for email in exact_emails[:5]:
+        all_results.append((domain, email))
+    
+    # 2. Find related domains
+    related_domains = find_related_domains(domain, limit=10)
+    
+    # 3. Generate emails for related domains
+    for related_domain in related_domains:
+        if related_domain != domain:
+            emails = generate_emails(related_domain, local_parts[:10])
+            for email in emails[:3]:
+                all_results.append((related_domain, email))
+    
+    return all_results
+
+def export_emails_to_csv(emails, filename="generated_emails.csv"):
+    """Export emails to CSV file"""
+    with open(filename, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Email'])
+        for email in emails:
+            writer.writerow([email])
+    print(f"✅ Exported {len(emails)} emails to {filename}")
+
+if __name__ == "__main__":
+    result = supabase.table('domains').select('domain_name').gte('score', 70).limit(100).execute()
+    domains = [r['domain_name'] for r in result.data]
+    
+    print(f"📊 Found {len(domains)} high-score domains")
+    print("🔄 Generating emails...")
+    
+    all_emails = []
+    for domain in domains:
+        emails = generate_emails(domain)
+        all_emails.extend(emails)
+    
+    export_emails_to_csv(all_emails, "generated_emails.csv")
+    print(f"📊 Total emails generated: {len(all_emails)}")
