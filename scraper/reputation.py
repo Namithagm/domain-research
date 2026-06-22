@@ -8,17 +8,17 @@ VT_API_KEY = os.environ.get("VT_API_KEY")
 ABUSEIPDB_KEY = os.environ.get("ABUSEIPDB_KEY")
 
 def check_talos(domain):
-    """Check Talos Intelligence reputation - returns neutral since it's blocked by Cloudflare"""
+    """Check Talos Intelligence reputation - returns neutral since it's blocked"""
     return {"talos_score": "unknown", "talos_category": "unknown", "talos_clean": None}
 
 def check_barracuda(domain):
-    """Check Barracuda Central reputation"""
+    """Check Barracuda Central reputation with timeout"""
     try:
         url = f"https://www.barracudacentral.org/lookups/lookup-reputation?type=5&ip={domain}"
         r = requests.get(
             url,
             headers={"User-Agent": "Mozilla/5.0"},
-            timeout=15
+            timeout=10
         )
         if r.status_code == 200:
             if "Good" in r.text:
@@ -28,11 +28,13 @@ def check_barracuda(domain):
             else:
                 return {"barracuda_clean": None, "barracuda_status": "unknown"}
         return {"barracuda_clean": None, "barracuda_status": "unknown"}
+    except requests.Timeout:
+        return {"barracuda_clean": None, "barracuda_status": "timeout"}
     except:
         return {"barracuda_clean": None, "barracuda_status": "error"}
 
 def check_virustotal(domain):
-    """Check VirusTotal reputation - requires API key"""
+    """Check VirusTotal reputation with timeout"""
     if not VT_API_KEY:
         return {"vt_clean": None, "vt_malicious_count": None, "vt_suspicious_count": None, "vt_total_scans": None}
     
@@ -55,12 +57,13 @@ def check_virustotal(domain):
                 "vt_total_scans": total
             }
         return {"vt_clean": None, "vt_malicious_count": None, "vt_suspicious_count": None, "vt_total_scans": None}
+    except requests.Timeout:
+        return {"vt_clean": None, "vt_malicious_count": None, "vt_suspicious_count": None, "vt_total_scans": None}
     except Exception as e:
-        print(f"VirusTotal error: {e}")
         return {"vt_clean": None, "vt_malicious_count": None, "vt_suspicious_count": None, "vt_total_scans": None}
 
 def check_abuseipdb(domain):
-    """Check AbuseIPDB reputation - requires API key"""
+    """Check AbuseIPDB reputation with timeout"""
     if not ABUSEIPDB_KEY:
         return {"abuse_score": None, "abuse_clean": None, "abuse_reports": None}
     
@@ -79,19 +82,22 @@ def check_abuseipdb(domain):
                 "abuse_reports": data.get("totalReports", 0)
             }
         return {"abuse_score": None, "abuse_clean": None, "abuse_reports": None}
-    except Exception as e:
-        print(f"AbuseIPDB error: {e}")
+    except requests.Timeout:
+        return {"abuse_score": None, "abuse_clean": None, "abuse_reports": None}
+    except:
         return {"abuse_score": None, "abuse_clean": None, "abuse_reports": None}
 
 def check_urlvoid(domain):
-    """Check URLVoid reputation - often blocked by Cloudflare"""
+    """Check URLVoid reputation - often blocked"""
     try:
         url = f"https://www.urlvoid.com/scan/{domain}"
-        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
         if r.status_code == 200:
             if "0 detections" in r.text.lower() or "no detections" in r.text.lower():
                 return {"urlvoid_clean": True}
             return {"urlvoid_clean": False}
+        return {"urlvoid_clean": None}
+    except requests.Timeout:
         return {"urlvoid_clean": None}
     except:
         return {"urlvoid_clean": None}

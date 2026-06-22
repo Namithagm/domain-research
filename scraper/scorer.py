@@ -1,33 +1,49 @@
 import whois
 from datetime import datetime, timezone
 import pytz
+import threading
+import queue
+
+def get_domain_age_with_timeout(domain, timeout=5):
+    """Get domain age with timeout to prevent hanging"""
+    result_queue = queue.Queue()
+    
+    def worker():
+        try:
+            w = whois.whois(domain)
+            if w.creation_date:
+                if isinstance(w.creation_date, list):
+                    creation_date = w.creation_date[0]
+                else:
+                    creation_date = w.creation_date
+                
+                if hasattr(creation_date, 'tzinfo') and creation_date.tzinfo is not None:
+                    creation_date = creation_date.astimezone(timezone.utc).replace(tzinfo=None)
+                
+                now = datetime.utcnow()
+                age = (now - creation_date).days / 365.25
+                result_queue.put(round(age, 1))
+            else:
+                result_queue.put(None)
+        except:
+            result_queue.put(None)
+    
+    thread = threading.Thread(target=worker)
+    thread.daemon = True
+    thread.start()
+    thread.join(timeout)
+    
+    if thread.is_alive():
+        return None
+    
+    try:
+        return result_queue.get_nowait()
+    except:
+        return None
 
 def get_domain_age(domain):
-    """Get domain age in years - handles timezone issues"""
-    try:
-        w = whois.whois(domain)
-        if w.creation_date:
-            # Handle list or single date
-            if isinstance(w.creation_date, list):
-                creation_date = w.creation_date[0]
-            else:
-                creation_date = w.creation_date
-            
-            # Handle timezone-aware vs naive datetime
-            if hasattr(creation_date, 'tzinfo') and creation_date.tzinfo is not None:
-                # If timezone-aware, convert to naive UTC
-                creation_date = creation_date.astimezone(timezone.utc).replace(tzinfo=None)
-            
-            # Get current time (naive UTC)
-            now = datetime.utcnow()
-            
-            # Calculate age in years
-            age = (now - creation_date).days / 365.25
-            return round(age, 1)
-        return None
-    except Exception as e:
-        # Silent fail - return None
-        return None
+    """Get domain age with 5-second timeout"""
+    return get_domain_age_with_timeout(domain, timeout=5)
 
 def get_age_points(age):
     """Convert domain age to points"""
@@ -55,7 +71,6 @@ def score_domain(data):
         score += 50
     elif dmarc == "missing":
         score += 50
-    # reject = 0 points
     max_possible += 60
 
     # ====== Spamhaus Score (max 40) ======
@@ -64,7 +79,6 @@ def score_domain(data):
         score += 40
     elif spamhaus is None:
         score += 25
-    # False = 0 points
     max_possible += 40
 
     # ====== Talos Score (max 30) ======
@@ -73,7 +87,6 @@ def score_domain(data):
         score += 30
     elif talos is None:
         score += 10
-    # False = 0 points
     max_possible += 30
 
     # ====== Barracuda Score (max 20) ======
@@ -82,7 +95,6 @@ def score_domain(data):
         score += 20
     elif barracuda is None:
         score += 10
-    # False = 0 points
     max_possible += 20
 
     # ====== VirusTotal Score (max 25) ======
@@ -91,7 +103,6 @@ def score_domain(data):
         score += 25
     elif vt is None:
         score += 10
-    # False = 0 points
     max_possible += 25
 
     # ====== AbuseIPDB Score (max 15) ======
@@ -100,7 +111,6 @@ def score_domain(data):
         score += 15
     elif abuse is None:
         score += 5
-    # False = 0 points
     max_possible += 15
 
     # ====== URLVoid Score (max 10) ======
@@ -109,7 +119,6 @@ def score_domain(data):
         score += 10
     elif urlvoid is None:
         score += 5
-    # False = 0 points
     max_possible += 10
 
     # ====== Domain Age Score (max 15) ======
@@ -118,7 +127,6 @@ def score_domain(data):
     score += age_points
     max_possible += 15
 
-    # Normalize to 100
     if max_possible == 0:
         return 0
 

@@ -1,7 +1,7 @@
 import dns.resolver
 
 def check_mx(domain):
-    """Check if domain has MX record"""
+    """Check if domain has MX record with timeout"""
     try:
         dns.resolver.resolve(domain, "MX", lifetime=3)
         return True
@@ -9,7 +9,7 @@ def check_mx(domain):
         return False
 
 def check_spf(domain):
-    """Check if domain has SPF record"""
+    """Check if domain has SPF record with timeout"""
     try:
         txts = dns.resolver.resolve(domain, "TXT", lifetime=3)
         return any("v=spf1" in r.to_text() for r in txts)
@@ -17,7 +17,7 @@ def check_spf(domain):
         return False
 
 def check_dmarc(domain):
-    """Check DMARC policy: none, quarantine, reject, or missing"""
+    """Check DMARC policy with timeout"""
     try:
         records = dns.resolver.resolve(f"_dmarc.{domain}", "TXT", lifetime=3)
         for r in records:

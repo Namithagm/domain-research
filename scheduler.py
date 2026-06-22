@@ -50,13 +50,17 @@ def run_scrape():
             # Step 8: URLVoid
             data.update(check_urlvoid(domain))
             
-            # Step 9: Domain Age
-            domain_age = get_domain_age(domain)
-            data["domain_age_years"] = domain_age
-            if domain_age:
-                print(f"  Domain Age: {domain_age} years")
-            else:
-                print(f"  Domain Age: Unknown")
+            # Step 9: Domain Age (with timeout handling)
+            try:
+                domain_age = get_domain_age(domain)
+                data["domain_age_years"] = domain_age
+                if domain_age:
+                    print(f"  Domain Age: {domain_age} years")
+                else:
+                    print(f"  Domain Age: Unknown (skipped)")
+            except Exception as e:
+                print(f"  Domain Age: Error - {e}")
+                data["domain_age_years"] = None
             
             # Step 10: Final Score
             data["score"] = score_domain(data)
