@@ -3,181 +3,162 @@ import re
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import time
-import whois
-from datetime import datetime
 
-def get_emails_from_url(url):
-    """Extract emails from a single URL"""
-    try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        response = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
-        emails = re.findall(email_pattern, response.text)
-        return list(set(emails))
-    except Exception as e:
-        return []
+# Common legitimate TLDs
+VALID_TLDS = ['.com', '.org', '.net', '.eu', '.nl', '.de', '.fr', '.uk', '.co.uk', '.io', '.gov', '.edu', '.ca', '.au', '.in']
 
-def find_impressum(domain):
-    """Find impressum/legal pages (common in Europe)"""
-    paths = [
-        '/impressum', '/legal', '/imprint', '/about/legal',
-        '/page/impressum', '/de/impressum', '/en/impressum'
-    ]
-    for path in paths:
-        url = f"https://{domain}{path}"
+def get_emails_from_url(url, retries=2):
+    """Extract emails from a single URL with retry logic"""
+    for attempt in range(retries):
         try:
-            response = requests.get(url, timeout=5)
-            if response.status_code == 200:
-                return url
-        except:
-            pass
-    return None
-
-def search_google_for_emails(domain):
-    """Search Google for emails (using free API or scraping)"""
-    try:
-        # Using DuckDuckGo as free alternative
-        import urllib.parse
-        query = f'site:{domain} "@{domain}"'
-        url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(query)}"
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        response = requests.get(url, headers=headers, timeout=10)
-        
-        email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
-        emails = re.findall(email_pattern, response.text)
-        return list(set([e for e in emails if domain in e]))
-    except:
-        return []
-
-def get_whois_email(domain):
-    """Get email from WHOIS registration"""
-    try:
-        w = whois.whois(domain)
-        emails = []
-        if w.emails:
-            if isinstance(w.emails, list):
-                emails.extend(w.emails)
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Connection': 'keep-alive',
+            }
+            response = requests.get(url, headers=headers, timeout=8)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Email regex
+            email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+            emails = re.findall(email_pattern, response.text)
+            
+            # Mailto links
+            for link in soup.find_all('a', href=True):
+                href = link['href']
+                if href.startswith('mailto:'):
+                    email = href.replace('mailto:', '').split('?')[0].strip()
+                    if email and '@' in email:
+                        emails.append(email)
+            
+            # Remove duplicates
+            emails = list(set(emails))
+            valid_emails = [e for e in emails if len(e) < 100 and len(e) > 3 and '@' in e]
+            
+            return valid_emails
+            
+        except requests.Timeout:
+            if attempt < retries - 1:
+                print(f"    ⏳ Timeout, retry {attempt+2} for {url}")
+                time.sleep(1)
             else:
-                emails.append(w.emails)
-        return list(set(emails))
-    except:
-        return []
+                return []
+        except Exception as e:
+            if attempt < retries - 1:
+                print(f"    ⏳ Error, retry {attempt+2} for {url}")
+                time.sleep(1)
+            else:
+                return []
+    
+    return []
 
-def crawl_website(domain, max_pages=30):
-    """Crawl website for emails"""
+def search_emails_on_site(domain, max_pages=15):
+    """Search site for emails with timeout limits"""
     all_emails = []
     visited = set()
-    to_visit = [f"https://{domain}"]
     
+    # Priority pages
     priority_paths = [
-        '/contact', '/about', '/team', '/support', '/help',
-        '/company', '/press', '/media', '/community',
-        '/careers', '/jobs', '/legal', '/privacy', '/terms'
+        f"https://{domain}",
+        f"https://{domain}/contact",
+        f"https://{domain}/contact-us",
+        f"https://{domain}/about",
+        f"https://{domain}/about-us",
+        f"https://{domain}/team",
+        f"https://{domain}/support",
+        f"https://{domain}/help",
+        f"https://{domain}/company",
+        f"https://{domain}/press",
+        f"https://{domain}/impressum",
+        f"https://{domain}/imprint",
+        f"https://{domain}/legal",
+        f"https://{domain}/privacy",
+        f"https://{domain}/careers",
+        f"https://{domain}/contact.html",
+        f"https://{domain}/about.html",
     ]
     
-    for path in priority_paths:
-        to_visit.append(f"https://{domain}{path}")
-    
+    to_visit = priority_paths
     count = 0
+    
     while to_visit and count < max_pages:
         url = to_visit.pop(0)
         if url in visited:
             continue
         
+        print(f"  🔍 Checking: {url}")
         visited.add(url)
         count += 1
         
-        emails = get_emails_from_url(url)
+        emails = get_emails_from_url(url, retries=2)
         if emails:
+            print(f"    ✅ Found {len(emails)} emails")
             all_emails.extend(emails)
         
-        # Find more links
+        # Try to find more links but limit
         try:
             headers = {'User-Agent': 'Mozilla/5.0'}
-            response = requests.get(url, headers=headers, timeout=10)
+            response = requests.get(url, headers=headers, timeout=5)
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            for link in soup.find_all('a', href=True):
-                href = link['href']
-                if href.startswith('/'):
+            link_count = 0
+            for a in soup.find_all('a', href=True):
+                if link_count > 5:
+                    break
+                href = a['href']
+                if href.startswith('/') and not href.startswith('/#'):
                     full_url = urljoin(url, href)
-                    if domain in full_url and full_url not in visited:
+                    if domain in full_url and full_url not in visited and full_url not in to_visit:
                         to_visit.append(full_url)
+                        link_count += 1
         except:
             pass
         
         time.sleep(0.3)
     
-    return list(set(all_emails))
-
-def discover_emails_for_domain(domain):
-    """Main function - finds ALL possible emails"""
-    print(f"\n🔍 Advanced Email Discovery for: {domain}")
-    print("=" * 50)
-    
-    all_emails = []
-    sources = []
-    
-    # 1. Crawl website
-    print("1️⃣ Crawling website...")
-    web_emails = crawl_website(domain, max_pages=30)
-    if web_emails:
-        all_emails.extend(web_emails)
-        sources.append("Website crawl")
-        print(f"   ✅ Found {len(web_emails)} emails")
-    
-    # 2. Check impressum/legal
-    print("2️⃣ Checking impressum/legal pages...")
-    impressum_url = find_impressum(domain)
-    if impressum_url:
-        impressum_emails = get_emails_from_url(impressum_url)
-        if impressum_emails:
-            all_emails.extend(impressum_emails)
-            sources.append("Impressum/Legal page")
-            print(f"   ✅ Found {len(impressum_emails)} emails")
-    
-    # 3. Search engine
-    print("3️⃣ Searching search engines...")
-    search_emails = search_google_for_emails(domain)
-    if search_emails:
-        all_emails.extend(search_emails)
-        sources.append("Search engine")
-        print(f"   ✅ Found {len(search_emails)} emails")
-    
-    # 4. WHOIS
-    print("4️⃣ Checking WHOIS registration...")
-    whois_emails = get_whois_email(domain)
-    if whois_emails:
-        all_emails.extend(whois_emails)
-        sources.append("WHOIS registration")
-        print(f"   ✅ Found {len(whois_emails)} emails")
-    
     # Remove duplicates
     all_emails = list(set(all_emails))
+    return all_emails
+
+def discover_emails_for_domain(domain):
+    """Main function to find legitimate emails"""
+    print(f"\n🔍 Searching for emails on: {domain}")
+    print("-" * 40)
     
-    # Filter only domain-specific emails
-    domain_emails = [e for e in all_emails if domain in e or '.de' in e]
+    emails = search_emails_on_site(domain, max_pages=15)
     
-    return {
+    # Filter: Keep domain emails AND legitimate related domain emails
+    filtered_emails = []
+    for e in emails:
+        # Keep if domain is in email (e.g., info@zonnet.nl)
+        if domain in e:
+            filtered_emails.append(e)
+        # Also keep if email has a legitimate TLD and looks valid
+        elif any(e.endswith(tld) for tld in VALID_TLDS):
+            # Don't keep obviously fake or disposable emails
+            if not any(bad in e.lower() for bad in ['test', 'demo', 'example', 'fake', 'temp', 'spam', 'noreply']):
+                filtered_emails.append(e)
+    
+    # Remove duplicates
+    filtered_emails = list(set(filtered_emails))
+    
+    results = {
         'domain': domain,
-        'emails': domain_emails,
-        'all_emails': all_emails,
-        'sources': sources
+        'emails': filtered_emails,
+        'sources': [f"https://{domain} and crawled pages"]
     }
+    
+    return results
 
 if __name__ == "__main__":
     domain = input("Enter domain to search: ").strip()
     results = discover_emails_for_domain(domain)
     
-    print("\n" + "=" * 50)
-    print(f"📊 RESULTS for: {domain}")
-    print("=" * 50)
-    print(f"Sources checked: {', '.join(results['sources'])}")
-    print(f"\n✅ Found {len(results['emails'])} domain-specific emails:")
+    print(f"\n📊 Results for: {domain}")
+    print(f"Found {len(results['emails'])} emails")
     for email in results['emails']:
         print(f"  {email}")
-    
-    if results['all_emails'] and len(results['all_emails']) > len(results['emails']):
-        print(f"\n📌 Found {len(results['all_emails'])} total emails (including non-domain)")
+    print(f"\nSources: {results['sources']}")
