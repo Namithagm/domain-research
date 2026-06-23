@@ -208,6 +208,9 @@ if st.button("🔍 Find Real Emails", type="primary"):
                 from legitimate_email_finder import discover_emails_for_domain
                 results = discover_emails_for_domain(legit_domain)
                 
+                # Debug line to check what's happening
+                st.write(f"🔍 DEBUG: Found {len(results['emails'])} emails")
+                
                 if results['emails']:
                     st.success(f"✅ Found {len(results['emails'])} real emails")
                     
