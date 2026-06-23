@@ -12,13 +12,13 @@ def check_mx(domain):
         return False
 
 def check_spf(domain):
-    """Check if domain has SPF record and return the actual SPF text"""
+    """Check SPF record and return the full SPF text"""
     try:
         txts = dns.resolver.resolve(domain, "TXT", lifetime=3)
         for r in txts:
             txt = r.to_text()
             if "v=spf1" in txt:
-                return txt  # Return the actual SPF record
+                return txt  # Return the full SPF record
         return None
     except dns.exception.Timeout:
         return None
@@ -44,12 +44,12 @@ def check_dmarc(domain):
         return "missing"
 
 def check_dns(domain):
-    """Combined DNS check - now stores full SPF record"""
+    """Combined DNS check - stores full SPF record"""
     spf_record = check_spf(domain)
     return {
         "domain_name": domain,
         "has_mx": check_mx(domain),
         "has_spf": spf_record is not None,
-        "spf_record": spf_record,  # Store the full SPF text
+        "spf_record": spf_record,  # Full SPF text stored here
         "dmarc_policy": check_dmarc(domain)
     }
