@@ -239,14 +239,15 @@ if st.button("🔍 Find Real Emails", type="primary"):
 
 st.divider()
 
-# ====== TLD Domain Fetcher ======
+# ====== TLD Domain Fetcher with Cooldown ======
 st.subheader("🌐 Fetch Domains by TLD")
 
 st.markdown("""
 Search for domains by their Top-Level Domain (TLD) like `.com`, `.org`, `.net`, `.uk`, etc.
+Domains fetched will be marked as "served" and won't appear again for the cooldown period.
 """)
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     tld_input = st.text_input("Enter TLD (e.g., .com, .org, .uk)", placeholder=".com")
@@ -256,18 +257,30 @@ with col2:
     
 with col3:
     tld_min_score = st.slider("Minimum Score", 0, 100, 0, key="tld_min_score")
+    
+with col4:
+    tld_cooldown = st.slider("Cooldown Days", 0, 90, 30, key="tld_cooldown")
 
 if st.button("🔍 Fetch Domains by TLD", type="primary"):
     if tld_input:
         with st.spinner(f"Fetching domains with TLD {tld_input}..."):
             try:
-                from tld_fetcher import fetch_domains_by_tld
-                results = fetch_domains_by_tld(tld_input, tld_limit, tld_min_score)
+                from tld_fetcher import fetch_domains_by_tld, mark_domains_as_served
+                results = fetch_domains_by_tld(tld_input, tld_limit, tld_min_score, tld_cooldown)
                 
                 if results:
-                    st.success(f"✅ Found {len(results)} domains with TLD {tld_input}")
+                    # Mark domains as served
+                    domain_names = [d['domain_name'] for d in results]
+                    batch_id = str(uuid.uuid4())[:8]
+                    mark_domains_as_served(domain_names, batch_id)
+                    
+                    st.success(f"✅ Found and marked {len(results)} domains with TLD {tld_input} (Batch: {batch_id})")
                     
                     df = pd.DataFrame(results)
+                    
+                    # Show cooldown info
+                    st.info(f"⏰ Cooldown: {tld_cooldown} days. These domains won't appear again until cooldown expires.")
+                    
                     st.dataframe(
                         df.style.background_gradient(subset=["score"], cmap="RdYlGn"),
                         use_container_width=True
@@ -277,11 +290,11 @@ if st.button("🔍 Fetch Domains by TLD", type="primary"):
                     st.download_button(
                         label="📥 Download CSV",
                         data=df.to_csv(index=False),
-                        file_name=f"domains_{tld_input.replace('.', '')}_{date.today()}.csv",
+                        file_name=f"domains_{tld_input.replace('.', '')}_{date.today()}_{batch_id}.csv",
                         mime="text/csv"
                     )
                 else:
-                    st.warning(f"No domains found with TLD {tld_input}. Try a different TLD or lower the score.")
+                    st.warning(f"No domains found with TLD {tld_input} within cooldown period. Try a different TLD, lower score, or increase cooldown.")
             except Exception as e:
                 st.error(f"Error: {e}")
                 st.info("Make sure tld_fetcher.py exists in your project folder.")
@@ -339,6 +352,8 @@ with st.expander("ℹ️ How It Works"):
     **Fetch Domains by TLD:**
     - Search for domains by TLD (.com, .org, .uk, etc.)
     - Filter by minimum score
+    - Set cooldown to avoid repeats
+    - Domains are automatically marked as served
     - Export results to CSV
     - View TLD statistics
     """)
