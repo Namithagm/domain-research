@@ -127,6 +127,7 @@ with tab1:
                             "DMARC Policy": result.get('dmarc_policy'),
                             "Has MX": result.get('has_mx'),
                             "Has SPF": result.get('has_spf'),
+                            "SPF Record": result.get('spf_record', 'N/A'),
                             "Spamhaus Clean": result.get('spamhaus_clean'),
                             "Domain Age": f"{result.get('domain_age_years', 'Unknown')} years" if result.get('domain_age_years') else "Unknown",
                             "Blacklisted": result.get('is_blacklisted'),
@@ -321,22 +322,72 @@ if st.button("📊 Show TLD Statistics"):
 
 st.divider()
 
-# ====== Simple Domain Search ======
-st.subheader("🔍 Search Domains by Keyword")
+# ====== Search by SPF Record ======
+st.subheader("📧 Search Domains by SPF Record")
 
 st.markdown("""
-Search for domains that contain any keyword (e.g., `outlook`, `microsoft`, `blog`, `shop`).
+Search for domains where the **SPF record contains a specific keyword** (e.g., `outlook`, `google`, `sendgrid`).
 """)
 
 col1, col2 = st.columns([2, 1])
 
 with col1:
-    search_keyword = st.text_input("Enter keyword to search", placeholder="outlook", key="search_keyword")
+    spf_keyword = st.text_input("Enter keyword to search in SPF", placeholder="outlook", key="spf_keyword")
+
+with col2:
+    spf_limit = st.number_input("Max Results", 10, 500, 100, step=10, key="spf_limit")
+
+if st.button("🔍 Search by SPF", type="primary"):
+    if spf_keyword:
+        with st.spinner(f"Searching for domains with '{spf_keyword}' in SPF..."):
+            try:
+                from advanced_domain_filter import search_domains_by_spf
+                results = search_domains_by_spf(spf_keyword, spf_limit)
+                
+                if results:
+                    st.success(f"✅ Found {len(results)} domains with '{spf_keyword}' in SPF")
+                    
+                    df = pd.DataFrame(results)
+                    
+                    # Show SPF record in the table
+                    st.dataframe(
+                        df[['domain_name', 'score', 'dmarc_policy', 'spamhaus_clean', 'domain_age_years', 'spf_record']],
+                        use_container_width=True
+                    )
+                    
+                    # Download CSV
+                    st.download_button(
+                        label="📥 Download CSV",
+                        data=df.to_csv(index=False),
+                        file_name=f"spf_{spf_keyword}_{date.today()}.csv",
+                        mime="text/csv"
+                    )
+                else:
+                    st.warning(f"No domains found with '{spf_keyword}' in SPF.")
+            except Exception as e:
+                st.error(f"Error: {e}")
+                st.info("Make sure spf_records are being collected. Run the scraper again to collect SPF records.")
+    else:
+        st.warning("Please enter a keyword to search in SPF.")
+
+st.divider()
+
+# ====== Simple Domain Search ======
+st.subheader("🔍 Search Domains by Keyword")
+
+st.markdown("""
+Search for domains that contain any keyword in the domain name (e.g., `outlook`, `microsoft`, `blog`, `shop`).
+""")
+
+col1, col2 = st.columns([2, 1])
+
+with col1:
+    search_keyword = st.text_input("Enter keyword to search in domain name", placeholder="outlook", key="search_keyword")
 
 with col2:
     search_limit = st.number_input("Max Results", 10, 500, 100, step=10, key="search_limit")
 
-if st.button("🔍 Search Domains", type="primary"):
+if st.button("🔍 Search Domain Names", type="primary"):
     if search_keyword:
         with st.spinner(f"Searching for domains containing '{search_keyword}'..."):
             try:
@@ -405,9 +456,14 @@ with st.expander("ℹ️ How It Works"):
     - Export results to CSV
     - View TLD statistics
 
-    **Search Domains by Keyword:**
-    - Simple keyword search (e.g., "outlook", "blog", "shop")
-    - Returns all matching domains
+    **Search by SPF Record:**
+    - Search for domains where SPF contains a keyword
+    - Example: "outlook" finds domains using Outlook/Microsoft 365
+    - Shows the actual SPF record
+
+    **Search by Domain Name:**
+    - Simple keyword search in domain names
+    - Example: "blog" finds all domains with "blog" in the name
     - Export results to CSV
     """)
 
