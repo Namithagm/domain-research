@@ -239,6 +239,75 @@ if st.button("🔍 Find Real Emails", type="primary"):
 
 st.divider()
 
+# ====== TLD Domain Fetcher ======
+st.subheader("🌐 Fetch Domains by TLD")
+
+st.markdown("""
+Search for domains by their Top-Level Domain (TLD) like `.com`, `.org`, `.net`, `.uk`, etc.
+""")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    tld_input = st.text_input("Enter TLD (e.g., .com, .org, .uk)", placeholder=".com")
+    
+with col2:
+    tld_limit = st.number_input("Number of Domains", 10, 500, 100, step=10)
+    
+with col3:
+    tld_min_score = st.slider("Minimum Score", 0, 100, 0, key="tld_min_score")
+
+if st.button("🔍 Fetch Domains by TLD", type="primary"):
+    if tld_input:
+        with st.spinner(f"Fetching domains with TLD {tld_input}..."):
+            try:
+                from tld_fetcher import fetch_domains_by_tld
+                results = fetch_domains_by_tld(tld_input, tld_limit, tld_min_score)
+                
+                if results:
+                    st.success(f"✅ Found {len(results)} domains with TLD {tld_input}")
+                    
+                    df = pd.DataFrame(results)
+                    st.dataframe(
+                        df.style.background_gradient(subset=["score"], cmap="RdYlGn"),
+                        use_container_width=True
+                    )
+                    
+                    # Download CSV
+                    st.download_button(
+                        label="📥 Download CSV",
+                        data=df.to_csv(index=False),
+                        file_name=f"domains_{tld_input.replace('.', '')}_{date.today()}.csv",
+                        mime="text/csv"
+                    )
+                else:
+                    st.warning(f"No domains found with TLD {tld_input}. Try a different TLD or lower the score.")
+            except Exception as e:
+                st.error(f"Error: {e}")
+                st.info("Make sure tld_fetcher.py exists in your project folder.")
+    else:
+        st.warning("Please enter a TLD.")
+
+# Show TLD statistics
+if st.button("📊 Show TLD Statistics"):
+    with st.spinner("Fetching TLD statistics..."):
+        try:
+            from tld_fetcher import get_tld_stats
+            stats = get_tld_stats()
+            
+            if stats:
+                st.success(f"✅ Found {len(stats)} TLDs in database")
+                
+                # Show top 20 TLDs
+                df_stats = pd.DataFrame(stats[:20], columns=['TLD', 'Count'])
+                st.dataframe(df_stats, use_container_width=True)
+            else:
+                st.warning("No TLD statistics available")
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+st.divider()
+
 # ====== Info Section ======
 with st.expander("ℹ️ How It Works"):
     st.markdown("""
@@ -266,6 +335,12 @@ with st.expander("ℹ️ How It Works"):
     - Searches contact pages, about pages, and team pages
     - Only returns emails that are publicly available
     - Export results to CSV
+
+    **Fetch Domains by TLD:**
+    - Search for domains by TLD (.com, .org, .uk, etc.)
+    - Filter by minimum score
+    - Export results to CSV
+    - View TLD statistics
     """)
 
 with st.expander("🛠️ Third Party Sources Used"):
