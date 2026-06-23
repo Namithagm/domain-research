@@ -321,70 +321,51 @@ if st.button("📊 Show TLD Statistics"):
 
 st.divider()
 
-# ====== Advanced Domain Filter ======
-st.subheader("🎯 Advanced Domain Filter")
+# ====== Simple Domain Search ======
+st.subheader("🔍 Search Domains by Keyword")
 
 st.markdown("""
-Retrieve domains with specific criteria:
-- **SPF:** Contains Outlook/Microsoft
-- **DMARC:** Reject policy
-- **Age:** Before 2019 (7+ years)
-- **Spamhaus:** Clean (not blacklisted)
+Search for domains that contain any keyword (e.g., `outlook`, `microsoft`, `blog`, `shop`).
 """)
 
-col1, col2 = st.columns(2)
+col1, col2 = st.columns([2, 1])
 
 with col1:
-    advanced_limit = st.number_input("Number of Domains", 10, 500, 100, step=10, key="advanced_limit")
-    advanced_spf = st.checkbox("SPF contains Outlook/Microsoft", value=True)
-    advanced_dmarc = st.checkbox("DMARC = reject", value=True)
-    
-with col2:
-    advanced_age = st.checkbox("Domain Age >= 7 years (before 2019)", value=True)
-    advanced_spamhaus = st.checkbox("Spamhaus Clean", value=True)
-    advanced_min_score = st.slider("Minimum Score", 0, 100, 0, key="advanced_min_score")
+    search_keyword = st.text_input("Enter keyword to search", placeholder="outlook", key="search_keyword")
 
-if st.button("🔍 Retrieve Matching Domains", type="primary"):
-    with st.spinner("Retrieving domains matching criteria..."):
-        try:
-            from advanced_domain_filter import filter_domains
-            results = filter_domains(
-                limit=advanced_limit,
-                spf_outlook=advanced_spf,
-                dmarc_reject=advanced_dmarc,
-                age_7_years=advanced_age,
-                spamhaus_clean=advanced_spamhaus,
-                min_score=advanced_min_score
-            )
-            
-            if results:
-                st.success(f"✅ Found {len(results)} domains matching criteria")
+with col2:
+    search_limit = st.number_input("Max Results", 10, 500, 100, step=10, key="search_limit")
+
+if st.button("🔍 Search Domains", type="primary"):
+    if search_keyword:
+        with st.spinner(f"Searching for domains containing '{search_keyword}'..."):
+            try:
+                from advanced_domain_filter import search_domains_by_keyword
+                results = search_domains_by_keyword(search_keyword, search_limit)
                 
-                df = pd.DataFrame(results)
-                st.dataframe(
-                    df.style.background_gradient(subset=["score"], cmap="RdYlGn"),
-                    use_container_width=True
-                )
-                
-                # Download CSV
-                st.download_button(
-                    label="📥 Download CSV",
-                    data=df.to_csv(index=False),
-                    file_name=f"advanced_filter_{date.today()}.csv",
-                    mime="text/csv"
-                )
-                
-                # Show summary stats
-                with st.expander("📊 Summary Statistics"):
-                    st.write(f"**Total Found:** {len(results)}")
-                    st.write(f"**Avg Score:** {df['score'].mean():.2f}")
-                    st.write(f"**Max Score:** {df['score'].max()}")
-                    st.write(f"**Avg Age:** {df['domain_age_years'].mean():.2f} years")
-            else:
-                st.warning("No domains found matching all criteria.")
-        except Exception as e:
-            st.error(f"Error: {e}")
-            st.info("Make sure advanced_domain_filter.py exists in your project folder.")
+                if results:
+                    st.success(f"✅ Found {len(results)} domains containing '{search_keyword}'")
+                    
+                    df = pd.DataFrame(results)
+                    st.dataframe(
+                        df.style.background_gradient(subset=["score"], cmap="RdYlGn"),
+                        use_container_width=True
+                    )
+                    
+                    # Download CSV
+                    st.download_button(
+                        label="📥 Download CSV",
+                        data=df.to_csv(index=False),
+                        file_name=f"search_{search_keyword}_{date.today()}.csv",
+                        mime="text/csv"
+                    )
+                else:
+                    st.warning(f"No domains found containing '{search_keyword}'")
+            except Exception as e:
+                st.error(f"Error: {e}")
+                st.info("Make sure advanced_domain_filter.py exists in your project folder.")
+    else:
+        st.warning("Please enter a keyword to search.")
 
 st.divider()
 
@@ -424,11 +405,9 @@ with st.expander("ℹ️ How It Works"):
     - Export results to CSV
     - View TLD statistics
 
-    **Advanced Domain Filter:**
-    - Filter by SPF (Outlook/Microsoft)
-    - Filter by DMARC (reject)
-    - Filter by Age (before 2019)
-    - Filter by Spamhaus (clean)
+    **Search Domains by Keyword:**
+    - Simple keyword search (e.g., "outlook", "blog", "shop")
+    - Returns all matching domains
     - Export results to CSV
     """)
 
