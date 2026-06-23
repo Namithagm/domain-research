@@ -5,7 +5,7 @@ from urllib.parse import urljoin, urlparse
 import time
 
 # Common legitimate TLDs
-VALID_TLDS = ['.com', '.org', '.net', '.eu', '.nl', '.de', '.fr', '.uk', '.co.uk', '.io', '.gov', '.edu', '.ca', '.au', '.in']
+VALID_TLDS = ['.com', '.org', '.net', '.eu', '.nl', '.de', '.fr', '.uk', '.co.uk', '.io', '.gov', '.edu', '.ca', '.au', '.in', '.co.jp', '.jp']
 
 def get_emails_from_url(url, retries=2):
     """Extract emails from a single URL with retry logic"""
@@ -55,7 +55,52 @@ def get_emails_from_url(url, retries=2):
     
     return []
 
-def search_emails_on_site(domain, max_pages=15):
+def get_emails_with_selenium(url):
+    """Extract emails from JavaScript-heavy websites using Selenium (optimized)"""
+    try:
+        from selenium import webdriver
+        from selenium.webdriver.chrome.options import Options
+        from selenium.webdriver.chrome.service import Service
+        from webdriver_manager.chrome import ChromeDriverManager
+        
+        print(f"  🌐 Using Selenium for: {url}")
+        
+        options = Options()
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--window-size=1920,1080')
+        options.add_argument('--page-load-strategy=eager')
+        
+        driver = webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()),
+            options=options
+        )
+        
+        driver.set_page_load_timeout(10)
+        driver.get(url)
+        
+        time.sleep(2)
+        
+        html = driver.page_source
+        driver.quit()
+        
+        # Extract emails
+        email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+        emails = re.findall(email_pattern, html)
+        
+        # Also look for mailto links
+        mailto_pattern = r'mailto:([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})'
+        mailto_emails = re.findall(mailto_pattern, html)
+        emails.extend(mailto_emails)
+        
+        return list(set(emails))
+    except Exception as e:
+        print(f"  ⚠️ Selenium error: {e}")
+        return []
+
+def search_emails_on_site(domain, max_pages=10, use_selenium=False):
     """Search site for emails with timeout limits"""
     all_emails = []
     visited = set()
@@ -93,7 +138,12 @@ def search_emails_on_site(domain, max_pages=15):
         visited.add(url)
         count += 1
         
-        emails = get_emails_from_url(url, retries=2)
+        # Use Selenium if requested, otherwise use requests
+        if use_selenium:
+            emails = get_emails_with_selenium(url)
+        else:
+            emails = get_emails_from_url(url, retries=2)
+        
         if emails:
             print(f"    ✅ Found {len(emails)} emails")
             all_emails.extend(emails)
@@ -117,18 +167,37 @@ def search_emails_on_site(domain, max_pages=15):
         except:
             pass
         
-        time.sleep(0.3)
+        time.sleep(0.2)
     
     # Remove duplicates
     all_emails = list(set(all_emails))
     return all_emails
 
 def discover_emails_for_domain(domain):
-    """Main function to find legitimate emails"""
+    """Main function to find legitimate emails with TLD fallback and Selenium support"""
     print(f"\n🔍 Searching for emails on: {domain}")
     print("-" * 40)
     
-    emails = search_emails_on_site(domain, max_pages=15)
+    # Step 1: Try with regular requests (faster)
+    print("  📡 Trying with Requests...")
+    emails = search_emails_on_site(domain, max_pages=12, use_selenium=False)
+    
+    # Step 2: If no emails, try .co.jp fallback for .jp domains
+    if not emails and domain.endswith('.jp') and not domain.endswith('.co.jp'):
+        alternative = domain.replace('.jp', '.co.jp')
+        print(f"  ⏳ No emails on {domain}, trying {alternative} with Requests...")
+        emails = search_emails_on_site(alternative, max_pages=12, use_selenium=False)
+    
+    # Step 3: If still no emails and domain is .jp or .co.jp, try Selenium
+    if not emails and (domain.endswith('.jp') or domain.endswith('.co.jp')):
+        print(f"  ⏳ No emails found with Requests, trying Selenium for Japanese domain...")
+        emails = search_emails_on_site(domain, max_pages=10, use_selenium=True)
+        
+        # Also try .co.jp with Selenium if domain is .jp
+        if not emails and domain.endswith('.jp') and not domain.endswith('.co.jp'):
+            alternative = domain.replace('.jp', '.co.jp')
+            print(f"  ⏳ Trying {alternative} with Selenium...")
+            emails = search_emails_on_site(alternative, max_pages=10, use_selenium=True)
     
     # Filter: Keep domain emails AND legitimate related domain emails
     filtered_emails = []
