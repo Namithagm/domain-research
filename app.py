@@ -420,6 +420,22 @@ if st.button("🔍 Search Domain Names", type="primary"):
 
 st.divider()
 
+# ====== Filter Statistics ======
+st.subheader("📊 Domain Filter Statistics")
+
+if st.button("📊 Show Filter Statistics"):
+    with st.spinner("Calculating filter statistics..."):
+        try:
+            from advanced_domain_filter import get_filter_stats
+            stats = get_filter_stats()
+            
+            st.metric("Total Domains", stats['total'])
+            st.metric("Domains Matching Filters", stats['filtered'])
+            st.metric("Filter Percentage", f"{stats['filtered_percentage']}%")
+            
+        except Exception as e:
+            st.error(f"Error: {e}")
+
 # ====== Info Section ======
 with st.expander("ℹ️ How It Works"):
     st.markdown("""
