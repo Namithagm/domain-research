@@ -35,7 +35,7 @@ st.divider()
 st.subheader("⚙️ Filters")
 col1, col2, col3 = st.columns(3)
 min_score = col1.slider("Minimum Score", 0, 100, 70)
-domain_count = col2.slider("Domains to Fetch", 10, 100, 50)
+domain_count = col2.slider("Domains to Fetch", 10, 1000, 100)
 cooldown = col3.slider("Cooldown Days (no repeats)", 0, 90, 1)
 
 st.divider()
@@ -254,7 +254,7 @@ with col1:
     tld_input = st.text_input("Enter TLD (e.g., .com, .org, .uk)", placeholder=".com")
     
 with col2:
-    tld_limit = st.number_input("Number of Domains", 10, 500, 100, step=10)
+    tld_limit = st.number_input("Number of Domains", 10, 1000, 100, step=10)
     
 with col3:
     tld_min_score = st.slider("Minimum Score", 0, 100, 0, key="tld_min_score")
@@ -335,7 +335,7 @@ with col1:
     spf_keyword = st.text_input("Enter keyword to search in SPF", placeholder="outlook", key="spf_keyword")
 
 with col2:
-    spf_limit = st.number_input("Max Results", 10, 500, 100, step=10, key="spf_limit")
+    spf_limit = st.number_input("Max Results", 10, 1000, 100, step=10, key="spf_limit")
 
 if st.button("🔍 Search by SPF", type="primary"):
     if spf_keyword:
@@ -385,7 +385,7 @@ with col1:
     search_keyword = st.text_input("Enter keyword to search in domain name", placeholder="outlook", key="search_keyword")
 
 with col2:
-    search_limit = st.number_input("Max Results", 10, 500, 100, step=10, key="search_limit")
+    search_limit = st.number_input("Max Results", 10, 1000, 100, step=10, key="search_limit")
 
 if st.button("🔍 Search Domain Names", type="primary"):
     if search_keyword:
@@ -419,22 +419,6 @@ if st.button("🔍 Search Domain Names", type="primary"):
         st.warning("Please enter a keyword to search.")
 
 st.divider()
-
-# ====== Filter Statistics ======
-st.subheader("📊 Domain Filter Statistics")
-
-if st.button("📊 Show Filter Statistics"):
-    with st.spinner("Calculating filter statistics..."):
-        try:
-            from advanced_domain_filter import get_filter_stats
-            stats = get_filter_stats()
-            
-            st.metric("Total Domains", stats['total'])
-            st.metric("Domains Matching Filters", stats['filtered'])
-            st.metric("Filter Percentage", f"{stats['filtered_percentage']}%")
-            
-        except Exception as e:
-            st.error(f"Error: {e}")
 
 # ====== Info Section ======
 with st.expander("ℹ️ How It Works"):
