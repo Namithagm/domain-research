@@ -60,14 +60,15 @@ def mark_as_served(domains, batch_id):
 def get_stats():
     """Get dashboard statistics"""
     try:
-        total = supabase.table("domains").select("*", count="exact").execute().count
-        high = supabase.table("domains").select("*", count="exact").gte("score", 70).execute().count
-        available = supabase.table("domains").select("*", count="exact").gte("score", 70).eq("is_blacklisted", False).execute().count
-        served = supabase.table("served_log").select("*", count="exact").eq("served_date", str(date.today())).execute().count
+        total = supabase.table("domains").select("count", count="exact").execute().count
+        high = supabase.table("domains").select("count", count="exact").gte("score", 70).execute().count
+        available = supabase.table("domains").select("count", count="exact").gte("score", 70).eq("is_blacklisted", False).execute().count
+        served = supabase.table("served_log").select("count", count="exact").eq("served_date", str(date.today())).execute().count
         
         last = supabase.table("scrape_log").select("scrape_date").order("scrape_date", desc=True).limit(1).execute()
         
-        old_domains = supabase.table("domains").select("*", count="exact").gte("domain_age_years", 7).execute().count
+        # Get old domains count (before 2019)
+        old_domains = supabase.table("domains").select("count", count="exact").gte("domain_age_years", 7).execute().count
         
         return {
             "total": total,
