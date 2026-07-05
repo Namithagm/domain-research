@@ -3,7 +3,6 @@ import pandas as pd
 import uuid
 from datetime import date
 from db.database import get_fresh_domains, mark_as_served, get_stats
-import os
 
 # ====== For Cloud Deployment - Scheduler is DISABLED ======
 # The scheduler runs on your local machine via Windows Task Scheduler
@@ -21,14 +20,8 @@ st.set_page_config(
 st.title("🔍 Domain Research Tool")
 st.caption(f"Auto-scrapes daily at 6AM (on local machine) | Today: {date.today()}")
 
-# ====== DEBUG: Check Secrets ======
-st.write(f"🔍 SUPABASE_URL: {os.environ.get('SUPABASE_URL', 'NOT SET')[:30] if os.environ.get('SUPABASE_URL') else 'NOT SET'}...")
-st.write(f"🔍 SUPABASE_KEY: {os.environ.get('SUPABASE_KEY', 'NOT SET')[:20] if os.environ.get('SUPABASE_KEY') else 'NOT SET'}...")
-
 # ====== Stats ======
 stats = get_stats()
-st.write(f"📊 DEBUG - Stats: {stats}")
-
 c1, c2, c3, c4, c5 = st.columns(5)
 c1.metric("📊 Total Domains", stats["total"])
 c2.metric("⭐ High Score (70+)", stats["high_score"])
@@ -51,7 +44,6 @@ st.divider()
 if st.button("🚀 Get Fresh Domains", type="primary", use_container_width=True):
     with st.spinner("Fetching fresh domains..."):
         rows = get_fresh_domains(domain_count, min_score, cooldown)
-        st.write(f"🔍 DEBUG: get_fresh_domains returned {len(rows)} rows")
 
     if not rows:
         st.warning("""
@@ -216,9 +208,6 @@ if st.button("🔍 Find Real Emails", type="primary"):
             try:
                 from legitimate_email_finder import discover_emails_for_domain
                 results = discover_emails_for_domain(legit_domain)
-                
-                # Debug line to check what's happening
-                st.write(f"🔍 DEBUG: Found {len(results['emails'])} emails")
                 
                 if results['emails']:
                     st.success(f"✅ Found {len(results['emails'])} real emails")
